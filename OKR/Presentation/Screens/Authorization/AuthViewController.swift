@@ -10,7 +10,7 @@ import SnapKit
 
 class AuthViewController: UIViewController {
 
-    // MARK: - Private properties
+    // MARK: - UI Elements
 
     private let authLabel: UILabel = {
         let label = UILabel()
@@ -49,6 +49,7 @@ class AuthViewController: UIViewController {
         button.layer.cornerRadius = 20
         button.backgroundColor = .clear
         button.titleLabel?.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
+        button.addTarget(self, action: #selector(didTapRegButton), for: .touchUpInside)
         return button
     }()
 
@@ -100,6 +101,14 @@ class AuthViewController: UIViewController {
             make.leading.trailing.equalToSuperview().inset(20)
             make.height.equalTo(44)
         }
+    }
+
+    // MARK: - Methods
+
+    @objc private func didTapRegButton() {
+        let regVC = RegistrationViewController()
+        regVC.modalPresentationStyle = .fullScreen
+        present(regVC, animated: true, completion: nil)
     }
 }
 
