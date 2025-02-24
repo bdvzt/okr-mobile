@@ -9,9 +9,9 @@ import UIKit
 import SnapKit
 
 class AuthViewController: UIViewController {
-    
+
     // MARK: - UI Elements
-    
+
     private let authLabel: UILabel = {
         let label = UILabel()
         label.text = "Авторизация"
@@ -20,18 +20,18 @@ class AuthViewController: UIViewController {
         label.font = UIFont.systemFont(ofSize: 32, weight: .bold)
         return label
     }()
-    
+
     private let emailInput: InputField = {
         let input = InputField(placeholder: "Email")
         return input
     }()
-    
+
     private let passwordInput: InputField = {
         let input = InputField(placeholder: "Пароль")
         input.setSecureTextEntry(true)
         return input
     }()
-    
+
     private let loginButton: UIButton = {
         let button = UIButton()
         button.setTitle("Войти", for: .normal)
@@ -42,7 +42,7 @@ class AuthViewController: UIViewController {
         button.addTarget(self, action: #selector(didTapLoginButton), for: .touchUpInside)
         return button
     }()
-    
+
     private let registrationButton: UIButton = {
         let button = UIButton()
         button.setTitle("Зарегистрироваться", for: .normal)
@@ -53,18 +53,18 @@ class AuthViewController: UIViewController {
         button.addTarget(self, action: #selector(didTapRegButton), for: .touchUpInside)
         return button
     }()
-    
+
     // MARK: - Lifecycle
-    
+
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .white
         setupViews()
         setupConstraints()
     }
-    
+
     // MARK: - Setup
-    
+
     private func setupViews() {
         view.addSubview(authLabel)
         view.addSubview(emailInput)
@@ -72,48 +72,48 @@ class AuthViewController: UIViewController {
         view.addSubview(loginButton)
         view.addSubview(registrationButton)
     }
-    
+
     private func setupConstraints() {
         authLabel.snp.makeConstraints { make in
             make.top.equalTo(view.safeAreaLayoutGuide).offset(80)
             make.leading.trailing.equalToSuperview().inset(20)
         }
-        
+
         emailInput.snp.makeConstraints { make in
             make.top.equalTo(authLabel.snp.bottom).offset(150)
             make.leading.trailing.equalToSuperview().inset(20)
             make.height.equalTo(44)
         }
-        
+
         passwordInput.snp.makeConstraints { make in
             make.top.equalTo(emailInput.snp.bottom).offset(20)
             make.leading.trailing.equalToSuperview().inset(20)
             make.height.equalTo(44)
         }
-        
+
         loginButton.snp.makeConstraints { make in
             make.top.equalTo(passwordInput.snp.bottom).offset(80)
             make.leading.trailing.equalToSuperview().inset(20)
             make.height.equalTo(44)
         }
-        
+
         registrationButton.snp.makeConstraints { make in
             make.top.equalTo(loginButton.snp.bottom).offset(20)
             make.leading.trailing.equalToSuperview().inset(20)
             make.height.equalTo(44)
         }
     }
-    
+
     // MARK: - Methods
-    
+
     @objc private func didTapLoginButton() {
-        let tabBarVC = TabController()
+        let tabBarVC = TabBarController()
         if let window = UIApplication.shared.windows.first {
             window.rootViewController = tabBarVC
             window.makeKeyAndVisible()
         }
     }
-    
+
     @objc private func didTapRegButton() {
         let regVC = RegistrationViewController()
         regVC.modalPresentationStyle = .fullScreen
