@@ -95,7 +95,7 @@ class RequestViewController: UIViewController, UIImagePickerControllerDelegate, 
         }
 
         attachButton.snp.makeConstraints { make in
-            make.top.equalTo(endDatePicker.snp.bottom).offset(40)
+            make.top.equalTo(endDatePicker.snp.bottom).offset(20)
             make.leading.trailing.equalToSuperview().inset(20)
             make.height.equalTo(44)
         }

@@ -39,6 +39,7 @@ class AuthViewController: UIViewController {
         button.layer.cornerRadius = 16
         button.backgroundColor = .systemBlue
         button.titleLabel?.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
+        button.addTarget(self, action: #selector(didTapLoginButton), for: .touchUpInside)
         return button
     }()
 
@@ -104,6 +105,14 @@ class AuthViewController: UIViewController {
     }
 
     // MARK: - Methods
+
+    @objc private func didTapLoginButton() {
+        let tabBarVC = TabBarController()
+        if let window = UIApplication.shared.windows.first {
+            window.rootViewController = tabBarVC
+            window.makeKeyAndVisible()
+        }
+    }
 
     @objc private func didTapRegButton() {
         let regVC = RegistrationViewController()
