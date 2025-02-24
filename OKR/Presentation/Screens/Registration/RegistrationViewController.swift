@@ -10,7 +10,16 @@ import SnapKit
 
 class RegistrationViewController: UIViewController {
 
-    // MARK: - Private properties
+    // MARK: - UI Elements
+
+    private let closeButton: UIButton = {
+        let button = UIButton(type: .system)
+        let image = UIImage(systemName: "xmark")?.withRenderingMode(.alwaysTemplate)
+        button.setImage(image, for: .normal)
+        button.tintColor = .black
+        button.addTarget(self, action: #selector(didTapCloseButton), for: .touchUpInside)
+        return button
+    }()
 
     private let registrationLabel: UILabel = {
         let label = UILabel()
@@ -70,6 +79,7 @@ class RegistrationViewController: UIViewController {
     // MARK: - Setup
 
     private func setupViews() {
+        view.addSubview(closeButton)
         view.addSubview(registrationLabel)
         view.addSubview(emailInput)
         view.addSubview(surnameInput)
@@ -80,6 +90,12 @@ class RegistrationViewController: UIViewController {
     }
 
     private func setupConstraints() {
+        closeButton.snp.makeConstraints { make in
+            make.top.equalTo(view.safeAreaLayoutGuide).offset(10)
+            make.leading.equalToSuperview().offset(20)
+            make.width.height.equalTo(30)
+        }
+
         registrationLabel.snp.makeConstraints { make in
             make.top.equalTo(view.safeAreaLayoutGuide).offset(80)
             make.leading.trailing.equalToSuperview().inset(20)
@@ -120,6 +136,14 @@ class RegistrationViewController: UIViewController {
             make.leading.trailing.equalToSuperview().inset(20)
             make.height.equalTo(44)
         }
+    }
+
+    // MARK: - Actions
+
+    @objc private func didTapCloseButton() {
+        let authVC = AuthViewController()
+        authVC.modalPresentationStyle = .fullScreen
+        present(authVC, animated: true, completion: nil)
     }
 }
 
