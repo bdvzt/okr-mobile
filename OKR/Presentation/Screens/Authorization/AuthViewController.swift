@@ -10,7 +10,7 @@ import SnapKit
 
 class AuthViewController: UIViewController {
 
-    // MARK: - Private properties
+    // MARK: - UI Elements
 
     private let authLabel: UILabel = {
         let label = UILabel()
@@ -39,6 +39,7 @@ class AuthViewController: UIViewController {
         button.layer.cornerRadius = 16
         button.backgroundColor = .systemBlue
         button.titleLabel?.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
+        button.addTarget(self, action: #selector(didTapLoginButton), for: .touchUpInside)
         return button
     }()
 
@@ -49,6 +50,7 @@ class AuthViewController: UIViewController {
         button.layer.cornerRadius = 20
         button.backgroundColor = .clear
         button.titleLabel?.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
+        button.addTarget(self, action: #selector(didTapRegButton), for: .touchUpInside)
         return button
     }()
 
@@ -73,12 +75,12 @@ class AuthViewController: UIViewController {
 
     private func setupConstraints() {
         authLabel.snp.makeConstraints { make in
-            make.top.equalTo(view.safeAreaLayoutGuide).offset(40)
+            make.top.equalTo(view.safeAreaLayoutGuide).offset(80)
             make.leading.trailing.equalToSuperview().inset(20)
         }
 
         emailInput.snp.makeConstraints { make in
-            make.top.equalTo(authLabel.snp.bottom).offset(40)
+            make.top.equalTo(authLabel.snp.bottom).offset(150)
             make.leading.trailing.equalToSuperview().inset(20)
             make.height.equalTo(44)
         }
@@ -90,7 +92,7 @@ class AuthViewController: UIViewController {
         }
 
         loginButton.snp.makeConstraints { make in
-            make.top.equalTo(passwordInput.snp.bottom).offset(20)
+            make.top.equalTo(passwordInput.snp.bottom).offset(80)
             make.leading.trailing.equalToSuperview().inset(20)
             make.height.equalTo(44)
         }
@@ -100,10 +102,22 @@ class AuthViewController: UIViewController {
             make.leading.trailing.equalToSuperview().inset(20)
             make.height.equalTo(44)
         }
+    }
 
-        registrationButton.snp.makeConstraints { make in
-            make.bottom.equalTo(view.safeAreaLayoutGuide).inset(20)
+    // MARK: - Methods
+
+    @objc private func didTapLoginButton() {
+        let tabBarVC = TabBarController()
+        if let window = UIApplication.shared.windows.first {
+            window.rootViewController = tabBarVC
+            window.makeKeyAndVisible()
         }
+    }
+
+    @objc private func didTapRegButton() {
+        let regVC = RegistrationViewController()
+        regVC.modalPresentationStyle = .fullScreen
+        present(regVC, animated: true, completion: nil)
     }
 }
 
