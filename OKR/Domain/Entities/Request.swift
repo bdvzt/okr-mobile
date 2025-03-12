@@ -9,8 +9,8 @@ import Foundation
 
 struct Request {
     let id: Int
-    let startDate: Date
-    let endDate: Date
+    let startedSkipping: Date
+    let finishedSkipping: Date
     let status: RequestStatus
     let user: User
     let proofs: [FileEntity]
