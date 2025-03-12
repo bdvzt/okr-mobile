@@ -15,9 +15,13 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
         guard let windowScene = (scene as? UIWindowScene) else { return }
 
-        self.window = UIWindow(windowScene: windowScene)
-        self.window?.rootViewController = AuthViewController()
+        let authRepository = AuthRepositoryImpl()
+        let loginUseCase = LoginUseCase(authRepository: authRepository)
+        let authViewModel = AuthViewModel(loginUseCase: loginUseCase)
+        let authViewController = AuthViewController(viewModel: authViewModel)
 
+        self.window = UIWindow(windowScene: windowScene)
+        self.window?.rootViewController = authViewController
         self.window?.makeKeyAndVisible()
     }
 
@@ -49,6 +53,6 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         // to restore the scene back to its current state.
     }
 
-
+    
 }
 

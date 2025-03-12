@@ -10,7 +10,7 @@ import SnapKit
 
 class AuthViewController: UIViewController {
 
-    // MARK: - UI Elements
+    private let viewModel: AuthViewModelProtocol
 
     private let authLabel: UILabel = {
         let label = UILabel()
@@ -39,7 +39,6 @@ class AuthViewController: UIViewController {
         button.layer.cornerRadius = 16
         button.backgroundColor = .systemBlue
         button.titleLabel?.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
-        button.addTarget(self, action: #selector(didTapLoginButton), for: .touchUpInside)
         return button
     }()
 
@@ -50,20 +49,25 @@ class AuthViewController: UIViewController {
         button.layer.cornerRadius = 20
         button.backgroundColor = .clear
         button.titleLabel?.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
-        button.addTarget(self, action: #selector(didTapRegButton), for: .touchUpInside)
         return button
     }()
 
-    // MARK: - Lifecycle
+    init(viewModel: AuthViewModelProtocol) {
+        self.viewModel = viewModel
+        super.init(nibName: nil, bundle: nil)
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
 
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .white
         setupViews()
         setupConstraints()
+        setupActions()
     }
-
-    // MARK: - Setup
 
     private func setupViews() {
         view.addSubview(authLabel)
@@ -104,23 +108,31 @@ class AuthViewController: UIViewController {
         }
     }
 
-    // MARK: - Methods
+    private func setupActions() {
+        loginButton.addTarget(self, action: #selector(didTapLoginButton), for: .touchUpInside)
+        registrationButton.addTarget(self, action: #selector(didTapRegButton), for: .touchUpInside)
+    }
 
     @objc private func didTapLoginButton() {
-        let tabBarVC = TabBarController()
-        if let window = UIApplication.shared.windows.first {
-            window.rootViewController = tabBarVC
-            window.makeKeyAndVisible()
+        guard let email = emailInput.text, !email.isEmpty,
+              let password = passwordInput.text, !password.isEmpty else {
+            print("Введите email и пароль")
+            return
+        }
+
+        Task {
+            await viewModel.login(email: email, password: password)
         }
     }
 
     @objc private func didTapRegButton() {
-        let regVC = RegistrationViewController()
-        regVC.modalPresentationStyle = .fullScreen
-        present(regVC, animated: true, completion: nil)
+        let registerVC = RegistrationViewController(viewModel: RegistrationViewModel(registerUseCase: RegisterUseCase(authRepository: AuthRepositoryImpl())))
+        registerVC.modalPresentationStyle = .fullScreen
+        present(registerVC, animated: true, completion: nil)
     }
 }
 
-#Preview {
-    AuthViewController()
-}
+//
+//#Preview {
+//    AuthViewController()
+//}

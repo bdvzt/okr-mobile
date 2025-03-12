@@ -8,7 +8,20 @@
 import UIKit
 import SnapKit
 
-class RegistrationViewController: UIViewController {
+final class RegistrationViewController: UIViewController {
+
+    // MARK: - Properties
+    private let viewModel: RegistrationViewModelProtocol
+
+    // MARK: - Init
+    init(viewModel: RegistrationViewModelProtocol) {
+        self.viewModel = viewModel
+        super.init(nibName: nil, bundle: nil)
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
 
     // MARK: - UI Elements
 
@@ -30,32 +43,11 @@ class RegistrationViewController: UIViewController {
         return label
     }()
 
-    private let emailInput: InputField = {
-        let input = InputField(placeholder: "Email")
-        return input
-    }()
-
-    private let surnameInput: InputField = {
-        let input = InputField(placeholder: "Фамилия")
-        return input
-    }()
-
-    private let nameInput: InputField = {
-        let input = InputField(placeholder: "Имя")
-        return input
-    }()
-
-    private let passwordInput: InputField = {
-        let input = InputField(placeholder: "Пароль")
-        input.setSecureTextEntry(true)
-        return input
-    }()
-
-    private let confirmPasswordInput: InputField = {
-        let input = InputField(placeholder: "Подтвердите пароль")
-        input.setSecureTextEntry(true)
-        return input
-    }()
+    private let emailInput = InputField(placeholder: "Email")
+    private let surnameInput = InputField(placeholder: "Фамилия")
+    private let nameInput = InputField(placeholder: "Имя")
+    private let passwordInput = InputField(placeholder: "Пароль")
+    private let confirmPasswordInput = InputField(placeholder: "Подтвердите пароль")
 
     private let registrationButton: UIButton = {
         let button = UIButton()
@@ -64,6 +56,7 @@ class RegistrationViewController: UIViewController {
         button.layer.cornerRadius = 16
         button.backgroundColor = .systemBlue
         button.titleLabel?.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
+        button.addTarget(self, action: #selector(didTapRegisterButton), for: .touchUpInside)
         return button
     }()
 
@@ -79,6 +72,9 @@ class RegistrationViewController: UIViewController {
     // MARK: - Setup
 
     private func setupViews() {
+        passwordInput.setSecureTextEntry(true)
+        confirmPasswordInput.setSecureTextEntry(true)
+
         view.addSubview(closeButton)
         view.addSubview(registrationLabel)
         view.addSubview(emailInput)
@@ -141,12 +137,30 @@ class RegistrationViewController: UIViewController {
     // MARK: - Actions
 
     @objc private func didTapCloseButton() {
-        let authVC = AuthViewController()
-        authVC.modalPresentationStyle = .fullScreen
-        present(authVC, animated: true, completion: nil)
+        dismiss(animated: true, completion: nil)
+    }
+
+    @objc private func didTapRegisterButton() {
+        guard let email = emailInput.text,
+              let surname = surnameInput.text,
+              let name = nameInput.text,
+              let password = passwordInput.text,
+              let confirmPassword = confirmPasswordInput.text else {
+            print("Заполните все поля")
+            return
+        }
+
+        guard password == confirmPassword else {
+            print("Пароли не совпадают")
+            return
+        }
+
+        Task {
+            await viewModel.register(firstName: name, lastName: surname, email: email, password: password)
+        }
     }
 }
-
-#Preview {
-    RegistrationViewController()
-}
+//
+//#Preview {
+//    RegistrationViewController()
+//}

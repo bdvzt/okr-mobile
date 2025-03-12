@@ -1,11 +1,11 @@
 //
-//  RegisterRequest.swift
+//  UserRegistration.swift
 //  OKR
 //
-//  Created by Zayata Budaeva on 11.03.2025.
+//  Created by Zayata Budaeva on 12.03.2025.
 //
 
-struct RegisterRequest: Codable {
+struct UserRegistration: Encodable {
     let firstName: String
     let lastName: String
     let email: String

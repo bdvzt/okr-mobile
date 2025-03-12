@@ -29,7 +29,7 @@ class AfterRegistrationViewController: UIViewController {
         button.backgroundColor = .systemBlue
         button.layer.cornerRadius = 16
         button.titleLabel?.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
-        button.addTarget(self, action: #selector(didTapLoginButton), for: .touchUpInside)
+//        button.addTarget(self, action: #selector(didTapLoginButton), for: .touchUpInside)
         return button
     }()
 
@@ -66,11 +66,11 @@ class AfterRegistrationViewController: UIViewController {
 
     // MARK: - Actions
 
-    @objc private func didTapLoginButton() {
-        let authVC = AuthViewController()
-        authVC.modalPresentationStyle = .fullScreen
-        present(authVC, animated: true, completion: nil)
-    }
+//    @objc private func didTapLoginButton() {
+//        let authVC = AuthViewController()
+//        authVC.modalPresentationStyle = .fullScreen
+//        present(authVC, animated: true, completion: nil)
+//    }
 }
 
 #Preview {
