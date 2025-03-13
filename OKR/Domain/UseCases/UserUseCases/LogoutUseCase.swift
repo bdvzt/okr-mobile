@@ -8,7 +8,7 @@
 import Foundation
 
 protocol LogoutUseCaseProtocol: AnyObject {
-    func execute() throws
+    func execute() async throws
 }
 
 final class LogoutUseCase {
@@ -20,8 +20,8 @@ final class LogoutUseCase {
 }
 
 extension LogoutUseCase: LogoutUseCaseProtocol {
-    func execute() throws {
-        try authRepository.logout()
+    func execute() async throws {
+        try await authRepository.logout()
     }
 }
 

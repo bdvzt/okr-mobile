@@ -21,11 +21,7 @@ class AuthViewController: UIViewController {
         return label
     }()
 
-    private let emailInput: InputField = {
-        let input = InputField(placeholder: "Email")
-        return input
-    }()
-
+    private let emailInput: InputField = InputField(placeholder: "Email")
     private let passwordInput: InputField = {
         let input = InputField(placeholder: "Пароль")
         input.setSecureTextEntry(true)
@@ -67,6 +63,7 @@ class AuthViewController: UIViewController {
         setupViews()
         setupConstraints()
         setupActions()
+        setupBindings()
     }
 
     private func setupViews() {
@@ -113,6 +110,20 @@ class AuthViewController: UIViewController {
         registrationButton.addTarget(self, action: #selector(didTapRegButton), for: .touchUpInside)
     }
 
+    private func setupBindings() {
+        viewModel.onLoginSuccess = { [weak self] in
+            DispatchQueue.main.async {
+                self?.navigateToTabBar()
+            }
+        }
+
+        viewModel.onRegister = { [weak self] in
+            DispatchQueue.main.async {
+                self?.navigateToRegister()
+            }
+        }
+    }
+
     @objc private func didTapLoginButton() {
         guard let email = emailInput.text, !email.isEmpty,
               let password = passwordInput.text, !password.isEmpty else {
@@ -126,6 +137,21 @@ class AuthViewController: UIViewController {
     }
 
     @objc private func didTapRegButton() {
+        viewModel.onRegister?()
+    }
+
+    private func navigateToTabBar() {
+        guard let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let window = scene.windows.first else {
+            return
+        }
+
+        let tabBarVC = TabBarController()
+        window.rootViewController = tabBarVC
+        window.makeKeyAndVisible()
+    }
+
+    private func navigateToRegister() {
         let registerVC = RegistrationViewController(viewModel: RegistrationViewModel(registerUseCase: RegisterUseCase(authRepository: AuthRepositoryImpl())))
         registerVC.modalPresentationStyle = .fullScreen
         present(registerVC, animated: true, completion: nil)

@@ -34,9 +34,9 @@ final class AuthRepositoryImpl: AuthRepository {
         let data = try JSONEncoder().encode(credentials)
         let config = AuthNetworkConfig.login(data)
 
-        let responseData: Data = try await networkService.request(config: config, authorized: false)
+        let responseData = try await networkService.requestRaw(config: config, authorized: false)
 
-        guard let token = String(data: responseData, encoding: .utf8) else {
+        guard let token = String(data: responseData, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) else {
             throw NSError(domain: "LoginError", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid token format"])
         }
 
@@ -45,7 +45,26 @@ final class AuthRepositoryImpl: AuthRepository {
         tokenStorage.saveToken(token)
     }
 
-    func logout() {
+    func logout() async {
+        guard let token = tokenStorage.retrieveToken() else {
+            print("Ошибка: Токен отсутствует")
+            return
+        }
+
+        let config = AuthNetworkConfig.logout
+
+        do {
+            let responseData = try await networkService.requestRaw(config: config, authorized: true)
+
+            if let responseString = String(data: responseData, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) {
+                print("Ответ сервера при выходе: \(responseString)")
+            } else {
+                print("Ошибка декодирования ответа")
+            }
+        } catch {
+            print("Ошибка при выходе: \(error.localizedDescription)")
+        }
+
         tokenStorage.deleteToken()
     }
 }

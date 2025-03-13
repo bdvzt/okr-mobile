@@ -9,13 +9,19 @@ import Foundation
 
 protocol NetworkServiceProtocol {
     func request<T: Decodable>(config: NetworkConfig, authorized: Bool) async throws -> T
+    func requestRaw(config: NetworkConfig, authorized: Bool) async throws -> Data
 }
 
 final class NetworkService: NetworkServiceProtocol {
     private let baseURL = URL(string: "http://95.182.120.75:8081/")!
     private let tokenStorage = TokenStorage()
-    
+
     func request<T: Decodable>(config: NetworkConfig, authorized: Bool) async throws -> T {
+        let data = try await requestRaw(config: config, authorized: authorized)
+        return try JSONDecoder().decode(T.self, from: data)
+    }
+
+    func requestRaw(config: NetworkConfig, authorized: Bool) async throws -> Data {
         var urlRequest = URLRequest(url: baseURL.appendingPathComponent(config.path + config.endPoint))
         urlRequest.httpMethod = config.method.rawValue
         urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -30,10 +36,6 @@ final class NetworkService: NetworkServiceProtocol {
 
         let (data, response) = try await URLSession.shared.data(for: urlRequest)
 
-        if let jsonString = String(data: data, encoding: .utf8) {
-            print("Ответ от сервера: \(jsonString)")
-        }
-
         guard let httpResponse = response as? HTTPURLResponse else {
             throw URLError(.badServerResponse)
         }
@@ -44,6 +46,6 @@ final class NetworkService: NetworkServiceProtocol {
             throw NSError(domain: "ServerError", code: httpResponse.statusCode, userInfo: [NSLocalizedDescriptionKey: "Ошибка \(httpResponse.statusCode)"])
         }
 
-        return try JSONDecoder().decode(T.self, from: data)
+        return data
     }
 }

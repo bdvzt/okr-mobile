@@ -17,7 +17,14 @@ class TabBarController: UITabBarController {
 
     private func setupTabs() {
         let requestVC = createNav(with: "Заявка", image: UIImage(systemName: "doc.text"), vc: RequestViewController())
-        let profileVC = createNav(with: "Профиль", image: UIImage(systemName: "person.crop.circle"), vc: ProfileViewController())
+        let profileVC = createNav(with: "Профиль", image: UIImage(systemName: "person.crop.circle"), vc: ProfileViewController(
+            viewModel: ProfileViewModel(
+                logoutUseCase: LogoutUseCase(
+                    authRepository: AuthRepositoryImpl()
+                )
+            )
+        )
+        )
 
         self.setViewControllers([requestVC, profileVC], animated: true)
         self.selectedIndex = 0

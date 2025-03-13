@@ -9,11 +9,16 @@ import Foundation
 
 protocol AuthViewModelProtocol: AnyObject {
     func login(email: String, password: String) async
+    var onLoginSuccess: (() -> Void)? { get set }
+    var onRegister: (() -> Void)? { get set }
 }
 
 final class AuthViewModel: AuthViewModelProtocol {
 
     private let loginUseCase: LoginUseCaseProtocol
+
+    var onLoginSuccess: (() -> Void)?
+    var onRegister: (() -> Void)?
 
     init(loginUseCase: LoginUseCaseProtocol) {
         self.loginUseCase = loginUseCase
@@ -23,7 +28,9 @@ final class AuthViewModel: AuthViewModelProtocol {
         let credentials = AuthCredentials(email: email, password: password)
         do {
             try await loginUseCase.execute(credentials: credentials)
-            print("йоу")
+            DispatchQueue.main.async {
+                self.onLoginSuccess?()
+            }
         } catch {
             print("Ошибка входа: \(error.localizedDescription)")
         }
