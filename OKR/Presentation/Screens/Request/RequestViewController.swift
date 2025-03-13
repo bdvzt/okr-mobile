@@ -8,9 +8,22 @@
 import UIKit
 import SnapKit
 
-class RequestViewController: UIViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
+final class RequestViewController: UIViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
 
-    // MARK: - UI Elements
+    // MARK: - Свойства
+    private let viewModel: RequestViewModelProtocol
+
+    // MARK: - Инициализация
+    init(viewModel: RequestViewModelProtocol) {
+        self.viewModel = viewModel
+        super.init(nibName: nil, bundle: nil)
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    // MARK: - UI Элементы
 
     private let titleLabel: UILabel = {
         let label = UILabel()
@@ -42,6 +55,7 @@ class RequestViewController: UIViewController, UIImagePickerControllerDelegate, 
         button.layer.cornerRadius = 20
         button.backgroundColor = .clear
         button.titleLabel?.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
+        button.addTarget(self, action: #selector(attachDocument), for: .touchUpInside)
         return button
     }()
 
@@ -52,6 +66,7 @@ class RequestViewController: UIViewController, UIImagePickerControllerDelegate, 
         button.layer.cornerRadius = 16
         button.backgroundColor = .systemBlue
         button.titleLabel?.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
+        button.addTarget(self, action: #selector(submitRequest), for: .touchUpInside)
         return button
     }()
 
@@ -64,8 +79,7 @@ class RequestViewController: UIViewController, UIImagePickerControllerDelegate, 
         view.backgroundColor = .white
         setupViews()
         setupConstraints()
-        attachButton.addTarget(self, action: #selector(attachDocument), for: .touchUpInside)
-        sendRequestButton.addTarget(self, action: #selector(submitRequest), for: .touchUpInside)
+        setupBindings()
     }
 
     // MARK: - Setup
@@ -107,6 +121,20 @@ class RequestViewController: UIViewController, UIImagePickerControllerDelegate, 
         }
     }
 
+    private func setupBindings() {
+        viewModel.onRequestSuccess = { [weak self] message in
+            DispatchQueue.main.async {
+                self?.showAlert(title: "Успех", message: message)
+            }
+        }
+
+        viewModel.onRequestFailure = { [weak self] errorMessage in
+            DispatchQueue.main.async {
+                self?.showAlert(title: "Ошибка", message: errorMessage)
+            }
+        }
+    }
+
     // MARK: - Actions
 
     @objc private func attachDocument() {
@@ -119,11 +147,21 @@ class RequestViewController: UIViewController, UIImagePickerControllerDelegate, 
         let startDate = startDatePicker.date
         let endDate = endDatePicker.date
 
-        if let document = selectedDocument {
-            print("Дата начала: \(startDate), Дата окончания: \(endDate), Документ: \(document.lastPathComponent)")
-        } else {
-            print("Дата начала: \(startDate), Дата окончания: \(endDate), Документ не прикреплён")
+        let dateFormatter = ISO8601DateFormatter()
+        let startString = dateFormatter.string(from: startDate)
+        let endString = dateFormatter.string(from: endDate)
+
+        let request = CreateRequestDTO(startedSkipping: startString, finishedSkipping: endString)
+
+        Task {
+            await viewModel.sendRequest(dates: request)
         }
+    }
+
+    private func showAlert(title: String, message: String) {
+        let alertController = UIAlertController(title: title, message: message, preferredStyle: .alert)
+        alertController.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
+        present(alertController, animated: true, completion: nil)
     }
 }
 
@@ -134,8 +172,4 @@ extension RequestViewController: UIDocumentPickerDelegate {
         selectedDocument = urls.first
         print("Документ выбран: \(selectedDocument?.lastPathComponent ?? "Нет")")
     }
-}
-
-#Preview {
-    RequestViewController()
 }

@@ -62,7 +62,7 @@ enum RequestNetworkConfig: NetworkConfig {
 private extension RequestNetworkConfig {
     enum Constants {
         enum Path {
-            static let request = "/request"
+            static let request = "request"
         }
 
         enum Endpoint {
