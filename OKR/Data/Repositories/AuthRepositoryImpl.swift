@@ -16,18 +16,26 @@ final class AuthRepositoryImpl: AuthRepository {
     }
 
     func register(user: UserRegistration) async throws {
-        let data = try JSONEncoder().encode(user)
-        let config = AuthNetworkConfig.register(data)
+        do {
+            let data = try JSONEncoder().encode(user)
+            let config = AuthNetworkConfig.register(data)
 
-        let responseData: Data = try await networkService.request(config: config, authorized: false)
+            let responseData = try await networkService.requestRaw(config: config, authorized: false)
 
-        guard let token = String(data: responseData, encoding: .utf8) else {
-            throw NSError(domain: "RegistrationError", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid token format"])
+            guard let token = String(data: responseData, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) else {
+                throw NSError(domain: "RegistrationError", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid token format"])
+            }
+
+            print("Полученный токен при регистрации: \(token)")
+
+            tokenStorage.saveToken(token)
+        } catch let error as NSError {
+            print("Ошибка регистрации: \(error.localizedDescription)")
+            throw NSError(domain: "RegistrationError", code: error.code, userInfo: [
+                NSLocalizedDescriptionKey: "Ошибка регистрации: \(error.localizedDescription)",
+                "code": error.code
+            ])
         }
-
-        print("Полученный токен при регистрации: \(token)")
-
-        tokenStorage.saveToken(token)
     }
 
     func login(credentials: AuthCredentials) async throws {

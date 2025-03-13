@@ -43,7 +43,13 @@ final class NetworkService: NetworkServiceProtocol {
         print("HTTP Status Code: \(httpResponse.statusCode)")
 
         if !(200...299).contains(httpResponse.statusCode) {
-            throw NSError(domain: "ServerError", code: httpResponse.statusCode, userInfo: [NSLocalizedDescriptionKey: "Ошибка \(httpResponse.statusCode)"])
+            let errorMessage = String(data: data, encoding: .utf8) ?? "Нет данных"
+            print("Ошибка запроса: \(httpResponse.statusCode) - \(errorMessage)")
+
+            throw NSError(domain: "ServerError", code: httpResponse.statusCode, userInfo: [
+                NSLocalizedDescriptionKey: "Ошибка \(httpResponse.statusCode): \(errorMessage)",
+                "response": errorMessage
+            ])
         }
 
         return data

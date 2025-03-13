@@ -67,6 +67,7 @@ final class RegistrationViewController: UIViewController {
         view.backgroundColor = .white
         setupViews()
         setupConstraints()
+        setupBindings() // Добавляем подписку на успешную регистрацию
     }
 
     // MARK: - Setup
@@ -134,6 +135,16 @@ final class RegistrationViewController: UIViewController {
         }
     }
 
+    // MARK: - Bindings
+
+    private func setupBindings() {
+        viewModel.onRegisterSuccess = { [weak self] in
+            DispatchQueue.main.async {
+                self?.navigateToTabBar()
+            }
+        }
+    }
+
     // MARK: - Actions
 
     @objc private func didTapCloseButton() {
@@ -159,8 +170,15 @@ final class RegistrationViewController: UIViewController {
             await viewModel.register(firstName: name, lastName: surname, email: email, password: password)
         }
     }
+
+    private func navigateToTabBar() {
+        guard let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let window = scene.windows.first else {
+            return
+        }
+
+        let tabBarVC = TabBarController()
+        window.rootViewController = tabBarVC
+        window.makeKeyAndVisible()
+    }
 }
-//
-//#Preview {
-//    RegistrationViewController()
-//}

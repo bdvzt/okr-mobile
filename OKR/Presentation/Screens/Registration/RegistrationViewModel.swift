@@ -9,11 +9,13 @@ import Foundation
 
 protocol RegistrationViewModelProtocol: AnyObject {
     func register(firstName: String, lastName: String, email: String, password: String) async
+    var onRegisterSuccess: (() -> Void)? { get set }
 }
 
 final class RegistrationViewModel: RegistrationViewModelProtocol {
 
     private let registerUseCase: RegisterUseCaseProtocol
+    var onRegisterSuccess: (() -> Void)?
 
     init(registerUseCase: RegisterUseCaseProtocol) {
         self.registerUseCase = registerUseCase
@@ -23,9 +25,14 @@ final class RegistrationViewModel: RegistrationViewModelProtocol {
         let user = UserRegistration(firstName: firstName, lastName: lastName, email: email, password: password)
         do {
             try await registerUseCase.execute(user: user)
-            print("Успешная регистрация")
+            print("✅ Успешная регистрация")
+
+            // Вызовем колбэк для перехода на TabBar
+            DispatchQueue.main.async {
+                self.onRegisterSuccess?()
+            }
         } catch {
-            print("Ошибка регистрации: \(error.localizedDescription)")
+            print("❌ Ошибка регистрации: \(error.localizedDescription)")
         }
     }
 }
