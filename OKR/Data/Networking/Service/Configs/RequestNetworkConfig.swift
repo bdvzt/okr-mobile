@@ -13,6 +13,7 @@ enum RequestNetworkConfig: NetworkConfig {
     case extendDateRequest(id: Int, data: Data)
     case downloadFile(fileId: Int)
     case unpinConfirmationFile(requestId: Int, fileId: Int)
+    case getRequestInfo(requestId: Int)
 
     var path: String {
         return Constants.Path.request
@@ -30,6 +31,8 @@ enum RequestNetworkConfig: NetworkConfig {
             return "\(Constants.Endpoint.downloadFile)\(fileId)"
         case let .unpinConfirmationFile(requestId, fileId):
             return "\(Constants.Endpoint.unpinConfirmationFile)\(requestId)/\(fileId)"
+        case let .getRequestInfo(requestId):
+            return "\(Constants.Endpoint.getRequestInfo)\(requestId)"
         }
     }
 
@@ -39,7 +42,7 @@ enum RequestNetworkConfig: NetworkConfig {
             return .post
         case .extendDateRequest:
             return .patch
-        case .downloadFile:
+        case .downloadFile, .getRequestInfo:
             return .get
         case .unpinConfirmationFile:
             return .delete
@@ -53,7 +56,7 @@ enum RequestNetworkConfig: NetworkConfig {
             return .requestBody(data)
         case let .uploadFile(_, file):
             return .requestBody(file)
-        case .downloadFile, .unpinConfirmationFile:
+        case .downloadFile, .unpinConfirmationFile, .getRequestInfo:
             return .request
         }
     }
@@ -71,6 +74,7 @@ private extension RequestNetworkConfig {
             static let extendDateRequest = "/"
             static let downloadFile = "/files/"
             static let unpinConfirmationFile = "/file/unpin/"
+            static let getRequestInfo = "/info/"
         }
     }
 }

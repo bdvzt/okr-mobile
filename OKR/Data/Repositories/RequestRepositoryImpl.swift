@@ -34,22 +34,52 @@ final class RequestRepositoryImpl: RequestRepository {
     func extendRequest(id: Int, date: ExtendRequestDateDTO) async throws {
         let requestData = try JSONEncoder().encode(date)
         let config = RequestNetworkConfig.extendDateRequest(id: id, data: requestData)
-        _ = try await networkService.requestRaw(config: config, authorized: true)
+
+        let responseData = try await networkService.requestRaw(config: config, authorized: true)
+
+        if let responseString = String(data: responseData, encoding: .utf8) {
+            print("Ответ от сервера (продление заявки): \(responseString)")
+        } else {
+            print("Ошибка: Сервер вернул некорректный ответ при продлении заявки")
+        }
     }
 
-    func uploadFile(requestId: Int, file: Data) async throws {
-        let config = RequestNetworkConfig.uploadFile(requestId: requestId, file: file)
+    func getRequestInfo(requestId: Int) async throws -> RequestDetailsDTO {
+        let config = RequestNetworkConfig.getRequestInfo(requestId: requestId)
+        print("🔗 URL: \(config.path + config.endPoint)")
+        print("🆔 ID заявки: \(requestId)")
+        print("📌 HTTP Метод: \(config.method.rawValue)")
+        let responseData = try await networkService.requestRaw(config: config, authorized: true)
+        do {
+            let decodedResponse = try JSONDecoder().decode(RequestDetailsDTO.self, from: responseData)
+            print("✅ Получена информация о заявке: \(decodedResponse)")
+            return decodedResponse
+        } catch {
+            let responseString = String(data: responseData, encoding: .utf8) ?? "Неизвестный ответ"
+            print("❌ Ошибка декодирования JSON: \(error.localizedDescription), ответ сервера: \(responseString)")
+            throw NSError(domain: "RequestError", code: -1, userInfo: [
+                NSLocalizedDescriptionKey: "Ошибка декодирования JSON: \(error.localizedDescription)"
+            ])
+        }
+    }
+
+    func uploadFile(requestId: Int, file: Data, fileName: String, mimeType: String) async throws {
+        let boundary = "Boundary-\(UUID().uuidString)"
+        var body = Data()
+
+        body.append("--\(boundary)\r\n".data(using: .utf8)!)
+        body.append("Content-Disposition: form-data; name=\"file\"; filename=\"\(fileName)\"\r\n".data(using: .utf8)!)
+        body.append("Content-Type: \(mimeType)\r\n\r\n".data(using: .utf8)!)
+        body.append(file)
+        body.append("\r\n".data(using: .utf8)!)
+        body.append("--\(boundary)--\r\n".data(using: .utf8)!)
+
+        let config = RequestNetworkConfig.uploadFile(requestId: requestId, file: body)
         _ = try await networkService.requestRaw(config: config, authorized: true)
     }
 
     func unpinFile(requestId: Int, fileId: Int) async throws {
         let config = RequestNetworkConfig.unpinConfirmationFile(requestId: requestId, fileId: fileId)
         _ = try await networkService.requestRaw(config: config, authorized: true)
-    }
-
-    func getRequestList(userId: Int?) async throws -> [RequestListDTO] {
-        let config = RequestNetworkConfig.downloadFile(fileId: userId ?? 0) // Указать правильный эндпоинт
-        let responseData = try await networkService.requestRaw(config: config, authorized: true)
-        return try JSONDecoder().decode([RequestListDTO].self, from: responseData)
     }
 }

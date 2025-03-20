@@ -21,11 +21,10 @@ final class NetworkService: NetworkServiceProtocol {
     func request<T: Decodable>(config: NetworkConfig, authorized: Bool) async throws -> T {
         let data = try await requestRaw(config: config, authorized: authorized)
 
-        // ✅ Проверяем, что сервер отправил
         if let responseString = String(data: data, encoding: .utf8) {
-            print("🔍 Полученные данные перед JSONDecoder(): \(responseString)")
+            print("Полученные данные перед JSONDecoder(): \(responseString)")
         } else {
-            print("❌ Ошибка: responseData не может быть преобразован в строку")
+            print("Ошибка: responseData не может быть преобразован в строку")
         }
 
         return try JSONDecoder().decode(T.self, from: data)
