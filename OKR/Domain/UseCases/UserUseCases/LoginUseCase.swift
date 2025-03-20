@@ -8,20 +8,17 @@
 import Foundation
 
 protocol LoginUseCaseProtocol: AnyObject {
-    func execute(credentials: AuthCredentials) async throws
+    func execute(credentials: AuthCredentials) async throws -> TokenResponse
 }
 
-final class LoginUseCase {
+final class LoginUseCase: LoginUseCaseProtocol {
     private let authRepository: AuthRepository
 
     init(authRepository: AuthRepository) {
         self.authRepository = authRepository
     }
-}
 
-extension LoginUseCase: LoginUseCaseProtocol {
-    func execute(credentials: AuthCredentials) async throws {
-        try await authRepository.login(credentials: credentials)
+    func execute(credentials: AuthCredentials) async throws -> TokenResponse {
+        return try await authRepository.login(credentials: credentials)
     }
 }
-

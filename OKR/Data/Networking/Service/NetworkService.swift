@@ -14,7 +14,8 @@ protocol NetworkServiceProtocol {
 
 final class NetworkService: NetworkServiceProtocol {
 //    private let baseURL = URL(string: "http://95.182.120.75:8081/")!
-    private let baseURL = URL(string: "http://localhost:8080/swagger-ui/index.html#/")!
+//    private let baseURL = URL(string: "http://localhost:8080/swagger-ui/index.html#/")!
+    private let baseURL = URL(string: "http://localhost:8080/")!
     private let tokenStorage = TokenStorage()
 
     func request<T: Decodable>(config: NetworkConfig, authorized: Bool) async throws -> T {

@@ -8,7 +8,7 @@
 import Foundation
 
 protocol AuthRepository: AnyObject {
-    func register(user: UserRegistration) async throws
-    func login(credentials: AuthCredentials) async throws
-    func logout() async throws
+    func register(user: UserRegistration) async throws -> TokenResponse
+    func login(credentials: AuthCredentials) async throws -> TokenResponse
+    func logout() async
 }

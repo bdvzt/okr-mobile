@@ -8,19 +8,17 @@
 import Foundation
 
 protocol RegisterUseCaseProtocol: AnyObject {
-    func execute(user: UserRegistration) async throws
+    func execute(user: UserRegistration) async throws -> TokenResponse
 }
 
-final class RegisterUseCase {
+final class RegisterUseCase: RegisterUseCaseProtocol {
     private let authRepository: AuthRepository
 
     init(authRepository: AuthRepository) {
         self.authRepository = authRepository
     }
-}
 
-extension RegisterUseCase: RegisterUseCaseProtocol {
-    func execute(user: UserRegistration) async throws {
-        try await authRepository.register(user: user)
+    func execute(user: UserRegistration) async throws -> TokenResponse {
+        return try await authRepository.register(user: user)
     }
 }

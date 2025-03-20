@@ -10,43 +10,31 @@ import Foundation
 final class AuthRepositoryImpl: AuthRepository {
     private let tokenStorage = TokenStorage()
     private let networkService: NetworkServiceProtocol = NetworkService()
-    
-    func register(user: UserRegistration) async throws {
-        do {
-            let data = try JSONEncoder().encode(user)
-            let config = AuthNetworkConfig.register(data)
 
-            let responseData = try await networkService.requestRaw(config: config, authorized: false)
+    func register(user: UserRegistration) async throws -> TokenResponse {
+        let data = try JSONEncoder().encode(user)
+        let config = AuthNetworkConfig.register(data)
 
-            guard let token = String(data: responseData, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) else {
-                throw NSError(domain: "RegistrationError", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid token format"])
-            }
+        let tokenResponse: TokenResponse = try await networkService.request(config: config, authorized: false)
+        let token = tokenResponse.token.trimmingCharacters(in: .whitespacesAndNewlines)
 
-            print("Полученный токен при регистрации: \(token)")
+        print("Полученный токен при регистрации: \(token)")
+        tokenStorage.saveToken(token)
 
-            tokenStorage.saveToken(token)
-        } catch let error as NSError {
-            print("Ошибка регистрации: \(error.localizedDescription)")
-            throw NSError(domain: "RegistrationError", code: error.code, userInfo: [
-                NSLocalizedDescriptionKey: "Ошибка регистрации: \(error.localizedDescription)",
-                "code": error.code
-            ])
-        }
+        return tokenResponse
     }
 
-    func login(credentials: AuthCredentials) async throws {
+    func login(credentials: AuthCredentials) async throws -> TokenResponse {
         let data = try JSONEncoder().encode(credentials)
         let config = AuthNetworkConfig.login(data)
 
-        let responseData = try await networkService.requestRaw(config: config, authorized: false)
+        let tokenResponse: TokenResponse = try await networkService.request(config: config, authorized: false)
+        let token = tokenResponse.token.trimmingCharacters(in: .whitespacesAndNewlines)
 
-        guard let token = String(data: responseData, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) else {
-            throw NSError(domain: "LoginError", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid token format"])
-        }
-
-        print("Полученный токен: \(token)")
-
+        print("✅ Полученный токен: \(token)")
         tokenStorage.saveToken(token)
+
+        return tokenResponse
     }
 
     func logout() async {
