@@ -63,7 +63,7 @@ final class ProfileViewController: UIViewController {
         view.backgroundColor = .white
         setupViews()
         setupConstraints()
-        loadProfile()  // Загружаем данные профиля
+        loadProfile()
         logoutButton.addTarget(self, action: #selector(logoutAction), for: .touchUpInside)
     }
 
@@ -103,37 +103,51 @@ final class ProfileViewController: UIViewController {
     // MARK: - User info
     private func loadProfile() {
         Task {
+            print("🔍 loadProfile() вызван") // ✅ Проверяем, вызывается ли метод
             do {
                 let user = try await viewModel.getInfo()
-                DispatchQueue.main.async {
-                    self.profileInfoLabel.text = "\(user.firstName)\n\(user.lastName)"
-                    self.populateRequests(user.requestList)
-                }
+                updateUI(with: user)
             } catch {
-                DispatchQueue.main.async {
-                    self.showError(error.localizedDescription)
-                }
+                showError(error.localizedDescription)
             }
+        }
+    }
+
+    private func updateUI(with user: UserDTO) {
+        DispatchQueue.main.async {
+            print("✅ Данные пользователя получены: \(user.firstName) \(user.lastName), группа: \(user.group)")
+            self.profileInfoLabel.text = "\(user.firstName) \(user.lastName)\nГруппа: \(user.group)"
+            self.populateRequests(user.requestList)
         }
     }
 
     private func populateRequests(_ requests: [RequestDTO]) {
         requestsStackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
 
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd" // ✅ Формат сервера
+
         for request in requests {
             let requestView = RequestComponent()
-            if let startDate = ISO8601DateFormatter().date(from: request.startedSkipping),
-               let endDate = ISO8601DateFormatter().date(from: request.finishedSkipping) {
+
+            let startDate = dateFormatter.date(from: request.startedSkipping)
+            let endDate = dateFormatter.date(from: request.finishedSkipping)
+
+            if let startDate = startDate, let endDate = endDate {
                 requestView.configure(startDate: startDate, endDate: endDate, status: .pending)
+            } else {
+                print("⚠️ Ошибка парсинга даты для заявки ID: \(request.id)")
             }
             requestsStackView.addArrangedSubview(requestView)
         }
     }
 
     private func showError(_ message: String) {
-        let alert = UIAlertController(title: "Ошибка", message: message, preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "OK", style: .default))
-        present(alert, animated: true)
+        DispatchQueue.main.async {
+            let alert = UIAlertController(title: "Ошибка", message: message, preferredStyle: .alert)
+            alert.addAction(UIAlertAction(title: "OK", style: .default))
+            self.present(alert, animated: true)
+        }
     }
 
     // MARK: - Actions
@@ -155,5 +169,3 @@ final class ProfileViewController: UIViewController {
         }
     }
 }
-
-

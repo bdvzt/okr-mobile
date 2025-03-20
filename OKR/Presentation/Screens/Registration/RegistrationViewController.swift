@@ -12,6 +12,7 @@ final class RegistrationViewController: UIViewController {
 
     // MARK: - Properties
     private let viewModel: RegistrationViewModelProtocol
+    private var selectedGroup: Group = .first
 
     // MARK: - Init
     init(viewModel: RegistrationViewModelProtocol) {
@@ -49,6 +50,15 @@ final class RegistrationViewController: UIViewController {
     private let passwordInput = InputField(placeholder: "Пароль")
     private let confirmPasswordInput = InputField(placeholder: "Подтвердите пароль")
 
+    private let groupPickerView = UIPickerView()
+    private let groupTextField: UITextField = {
+        let textField = UITextField()
+        textField.placeholder = "Выберите группу"
+        textField.borderStyle = .roundedRect
+        textField.textAlignment = .center
+        return textField
+    }()
+
     private let registrationButton: UIButton = {
         let button = UIButton()
         button.setTitle("Зарегистрироваться", for: .normal)
@@ -67,7 +77,8 @@ final class RegistrationViewController: UIViewController {
         view.backgroundColor = .white
         setupViews()
         setupConstraints()
-        setupBindings() // Добавляем подписку на успешную регистрацию
+        setupGroupPicker()
+        setupBindings()
     }
 
     // MARK: - Setup
@@ -83,6 +94,7 @@ final class RegistrationViewController: UIViewController {
         view.addSubview(nameInput)
         view.addSubview(passwordInput)
         view.addSubview(confirmPasswordInput)
+        view.addSubview(groupTextField)
         view.addSubview(registrationButton)
     }
 
@@ -99,7 +111,7 @@ final class RegistrationViewController: UIViewController {
         }
 
         emailInput.snp.makeConstraints { make in
-            make.top.equalTo(registrationLabel.snp.bottom).offset(150)
+            make.top.equalTo(registrationLabel.snp.bottom).offset(100)
             make.leading.trailing.equalToSuperview().inset(20)
             make.height.equalTo(44)
         }
@@ -128,21 +140,25 @@ final class RegistrationViewController: UIViewController {
             make.height.equalTo(44)
         }
 
+        groupTextField.snp.makeConstraints { make in
+            make.top.equalTo(confirmPasswordInput.snp.bottom).offset(20)
+            make.leading.trailing.equalToSuperview().inset(20)
+            make.height.equalTo(44)
+        }
+
         registrationButton.snp.makeConstraints { make in
-            make.top.equalTo(confirmPasswordInput.snp.bottom).offset(80)
+            make.top.equalTo(groupTextField.snp.bottom).offset(40)
             make.leading.trailing.equalToSuperview().inset(20)
             make.height.equalTo(44)
         }
     }
 
-    // MARK: - Bindings
-
-    private func setupBindings() {
-        viewModel.onRegisterSuccess = { [weak self] in
-            DispatchQueue.main.async {
-                self?.navigateToTabBar()
-            }
-        }
+    // MARK: - Setup Picker
+    private func setupGroupPicker() {
+        groupPickerView.delegate = self
+        groupPickerView.dataSource = self
+        groupTextField.inputView = groupPickerView
+        groupTextField.text = Group.first.displayName
     }
 
     // MARK: - Actions
@@ -157,17 +173,25 @@ final class RegistrationViewController: UIViewController {
               let name = nameInput.text,
               let password = passwordInput.text,
               let confirmPassword = confirmPasswordInput.text else {
-            print("Заполните все поля")
+            print("❌ Заполните все поля")
             return
         }
 
         guard password == confirmPassword else {
-            print("Пароли не совпадают")
+            print("❌ Пароли не совпадают")
             return
         }
 
         Task {
-            await viewModel.register(firstName: name, lastName: surname, email: email, password: password)
+            await viewModel.register(firstName: name, lastName: surname, email: email, password: password, group: selectedGroup)
+        }
+    }
+
+    private func setupBindings() {
+        viewModel.onRegisterSuccess = { [weak self] in
+            DispatchQueue.main.async {
+                self?.navigateToTabBar()
+            }
         }
     }
 
@@ -180,5 +204,24 @@ final class RegistrationViewController: UIViewController {
         let tabBarVC = TabBarController()
         window.rootViewController = tabBarVC
         window.makeKeyAndVisible()
+    }
+}
+
+// MARK: - UIPickerView Delegate & DataSource
+extension RegistrationViewController: UIPickerViewDelegate, UIPickerViewDataSource {
+    func numberOfComponents(in pickerView: UIPickerView) -> Int { return 1 }
+
+    func pickerView(_ pickerView: UIPickerView, numberOfRowsInComponent component: Int) -> Int {
+        return Group.allCases.count
+    }
+
+    func pickerView(_ pickerView: UIPickerView, titleForRow row: Int, forComponent component: Int) -> String? {
+        return Group.allCases[row].displayName
+    }
+
+    func pickerView(_ pickerView: UIPickerView, didSelectRow row: Int, inComponent component: Int) {
+        selectedGroup = Group.allCases[row]
+        groupTextField.text = selectedGroup.displayName
+        view.endEditing(true)
     }
 }

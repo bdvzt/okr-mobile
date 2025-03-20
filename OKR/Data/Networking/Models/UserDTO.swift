@@ -10,7 +10,15 @@ struct UserDTO: Decodable {
     let firstName: String
     let lastName: String
     let email: String
-    let studentGroup: String
+    let studentGroup: String?
     let userRole: String
     let requestList: [RequestDTO]
+
+    var group: String {
+        if let studentGroup = studentGroup, let groupEnum = Group(rawValue: studentGroup) {
+            return groupEnum.displayName
+        } else {
+            return "Не указана"
+        }
+    }
 }

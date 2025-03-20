@@ -8,7 +8,7 @@
 import Foundation
 
 protocol RegistrationViewModelProtocol: AnyObject {
-    func register(firstName: String, lastName: String, email: String, password: String) async
+    func register(firstName: String, lastName: String, email: String, password: String, group: Group) async
     var onRegisterSuccess: (() -> Void)? { get set }
 }
 
@@ -21,13 +21,19 @@ final class RegistrationViewModel: RegistrationViewModelProtocol {
         self.registerUseCase = registerUseCase
     }
 
-    func register(firstName: String, lastName: String, email: String, password: String) async {
-        let user = UserRegistration(firstName: firstName, lastName: lastName, email: email, password: password)
+    func register(firstName: String, lastName: String, email: String, password: String, group: Group) async {
+        let user = UserRegistration(
+            firstName: firstName,
+            lastName: lastName,
+            email: email,
+            password: password,
+            group: group.rawValue
+        )
+
         do {
             try await registerUseCase.execute(user: user)
             print("✅ Успешная регистрация")
 
-            // Вызовем колбэк для перехода на TabBar
             DispatchQueue.main.async {
                 self.onRegisterSuccess?()
             }

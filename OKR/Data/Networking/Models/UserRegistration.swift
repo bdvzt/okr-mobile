@@ -10,4 +10,5 @@ struct UserRegistration: Encodable {
     let lastName: String
     let email: String
     let password: String
+    let group: String
 }
