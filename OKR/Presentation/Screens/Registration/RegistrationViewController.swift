@@ -172,16 +172,36 @@ final class RegistrationViewController: UIViewController {
     private func setupBindings() {
         viewModel.onRegisterSuccess = { [weak self] in
             DispatchQueue.main.async {
-                self?.navigateToTabBar()
+                self?.navigateToLoginWithAlert()
             }
         }
     }
 
-    private func navigateToTabBar() {
+    private func navigateToLoginWithAlert() {
+        let alert = UIAlertController(
+            title: "Ожидание подтверждения",
+            message: "Ваш аккаунт создан. Ожидайте подтверждения роли перед входом.",
+            preferredStyle: .alert
+        )
+
+        alert.addAction(UIAlertAction(title: "OK", style: .default) { _ in
+            self.navigateToLogin()
+        })
+
+        present(alert, animated: true)
+    }
+
+    private func navigateToLogin() {
         guard let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
               let window = scene.windows.first else { return }
 
-        window.rootViewController = TabBarController()
+        let authViewModel = AuthViewModel(
+            loginUseCase: LoginUseCase(authRepository: AuthRepositoryImpl()),
+            getInfoUseCase: GetInfoUseCase(userRepository: UserRepositoryImpl()) // ✅ Добавлен use case получения профиля
+        )
+
+        let authVC = AuthViewController(viewModel: authViewModel)
+        window.rootViewController = authVC
         window.makeKeyAndVisible()
     }
 }
