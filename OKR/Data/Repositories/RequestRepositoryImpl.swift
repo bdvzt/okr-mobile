@@ -79,6 +79,17 @@ final class RequestRepositoryImpl: RequestRepository {
 
     func unpinFile(requestId: Int, fileId: Int) async throws {
         let config = RequestNetworkConfig.unpinConfirmationFile(requestId: requestId, fileId: fileId)
-        _ = try await networkService.requestRaw(config: config, authorized: true)
+
+        print("🚀 Открепление файла ID: \(fileId) из заявки ID: \(requestId)")
+        print("🔗 URL: \(config.path + config.endPoint)")
+        print("📌 HTTP Метод: \(config.method.rawValue)")
+
+        let responseData = try await networkService.requestRaw(config: config, authorized: true)
+
+        if let responseString = String(data: responseData, encoding: .utf8) {
+            print("✅ Файл откреплен успешно: \(responseString)")
+        } else {
+            print("❌ Ошибка: Сервер вернул некорректный ответ при откреплении файла")
+        }
     }
 }

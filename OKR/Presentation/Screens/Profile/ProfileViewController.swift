@@ -144,23 +144,20 @@ final class ProfileViewController: UIViewController {
     }
 
     @objc private func openRequestDetail(_ sender: UIButton) {
-        let requestId = sender.tag  // ✅ Теперь всегда корректный ID
-        print("📌 Открытие заявки с ID: \(requestId)")  // Лог для отладки
-
-        // 1️⃣ Создаём репозиторий
+        let requestId = sender.tag
+        
         let requestRepository = RequestRepositoryImpl()
 
-        // 2️⃣ Создаём UseCases
         let getRequestInfoUseCase = GetRequestInfoUseCase(requestRepository: requestRepository)
         let uploadFileUseCase = UploadFileUseCase(requestRepository: requestRepository)
+        let unpinFileUseCase = UnpinFileUseCase(requestRepository: requestRepository)
 
-        // 3️⃣ Создаём ViewModel, передавая оба UseCase
         let requestDetailVM = RequestDetailViewModel(
             getRequestInfoUseCase: getRequestInfoUseCase,
-            uploadFileUseCase: uploadFileUseCase  // ✅ Теперь передаём
+            uploadFileUseCase: uploadFileUseCase,
+            unpinFileUseCase: unpinFileUseCase
         )
 
-        // 4️⃣ Создаём и показываем экран деталей заявки
         let requestDetailVC = RequestDetailViewController(requestId: requestId, viewModel: requestDetailVM)
         requestDetailVC.modalPresentationStyle = .fullScreen
         present(requestDetailVC, animated: true)

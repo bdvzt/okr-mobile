@@ -134,7 +134,6 @@ final class RequestDetailViewController: UIViewController, UIDocumentPickerDeleg
                         self.requestView.configure(startDate: startDate, endDate: endDate, status: request.status)
                     }
 
-                    // ✅ Теперь файлы загружаются и отображаются
                     self.displayFiles(request.files)
                 }
             } catch {
@@ -143,12 +142,12 @@ final class RequestDetailViewController: UIViewController, UIDocumentPickerDeleg
         }
     }
     private func displayFiles(_ files: [FileInfoDTO]) {
-        print("📂 Загружено файлов: \(files.count)") // ✅ Проверяем, сколько файлов приходит
+        print("📂 Загружено файлов: \(files.count)")
 
         filesStackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
 
         for file in files {
-            print("📄 Добавление файла: \(file.fileName)") // ✅ Проверяем имена файлов
+            print("📄 Добавление файла: \(file.fileName)")
 
             let fileComponent = FileComponent()
             fileComponent.configure(fileId: file.id, fileName: file.fileName) { fileId in
@@ -157,7 +156,6 @@ final class RequestDetailViewController: UIViewController, UIDocumentPickerDeleg
             filesStackView.addArrangedSubview(fileComponent)
         }
 
-        // ✅ Включаем `isHidden = false` на всякий случай
         filesScrollView.isHidden = files.isEmpty
     }
 
@@ -201,7 +199,6 @@ final class RequestDetailViewController: UIViewController, UIDocumentPickerDeleg
         }
     }
 
-    // Функция определения MIME-типа по URL
     private func getMimeType(for url: URL) -> String {
         let pathExtension = url.pathExtension.lowercased()
         switch pathExtension {
@@ -220,6 +217,28 @@ final class RequestDetailViewController: UIViewController, UIDocumentPickerDeleg
     }
 
     private func deleteFile(fileId: Int) {
-        print("🚀 Удаление файла с ID: \(fileId)") // Пока только лог
+        let alert = UIAlertController(
+            title: "Удаление файла",
+            message: "Вы уверены, что хотите удалить этот файл?",
+            preferredStyle: .alert
+        )
+
+        alert.addAction(UIAlertAction(title: "Отмена", style: .cancel, handler: nil))
+        alert.addAction(UIAlertAction(title: "Удалить", style: .destructive, handler: { _ in
+            Task {
+                do {
+                    try await self.viewModel.unpinFile(requestId: self.requestId, fileId: fileId)
+                    DispatchQueue.main.async {
+                        self.showAlert(title: "Успех", message: "Файл удален!")
+                        self.loadRequestDetails()
+                    }
+                } catch {
+                    print("❌ Ошибка удаления файла: \(error.localizedDescription)")
+                    self.showAlert(title: "Ошибка", message: "Не удалось удалить файл.")
+                }
+            }
+        }))
+
+        present(alert, animated: true)
     }
 }
