@@ -20,8 +20,9 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
         let loginUseCase = LoginUseCase(authRepository: authRepository)
         let getInfoUseCase = GetInfoUseCase(userRepository: userRepository)
+        let logoutUseCase = LogoutUseCase(authRepository: authRepository)
 
-        let authViewModel = AuthViewModel(loginUseCase: loginUseCase, getInfoUseCase: getInfoUseCase)
+        let authViewModel = AuthViewModel(loginUseCase: loginUseCase, getInfoUseCase: getInfoUseCase, logoutUseCase: logoutUseCase)
         let authViewController = AuthViewController(viewModel: authViewModel)
 
         self.window = UIWindow(windowScene: windowScene)

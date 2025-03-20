@@ -18,13 +18,17 @@ final class AuthViewModel: AuthViewModelProtocol {
 
     private let loginUseCase: LoginUseCaseProtocol
     private let getInfoUseCase: GetInfoUseCaseProtocol
+    private let logoutUseCase: LogoutUseCaseProtocol
 
     var onLoginSuccess: (() -> Void)?
     var onRegister: (() -> Void)?
 
-    init(loginUseCase: LoginUseCaseProtocol, getInfoUseCase: GetInfoUseCaseProtocol) {
+    init(loginUseCase: LoginUseCaseProtocol,
+         getInfoUseCase: GetInfoUseCaseProtocol,
+         logoutUseCase: LogoutUseCaseProtocol) {
         self.loginUseCase = loginUseCase
         self.getInfoUseCase = getInfoUseCase
+        self.logoutUseCase = logoutUseCase
     }
 
     func login(email: String, password: String) async {
@@ -34,15 +38,31 @@ final class AuthViewModel: AuthViewModelProtocol {
 
             let userInfo = try await getInfoUseCase.execute()
 
-            DispatchQueue.main.async {
-                if userInfo.userRole == "USER" {
+            if userInfo.userRole == "USER" {
+                DispatchQueue.main.async {
                     self.showPendingRoleAlert()
-                } else {
+                }
+
+                // Выполняем выход асинхронно в фоне, без блокировки главного потока
+                Task {
+                    do {
+                        try await self.logoutUseCase.execute()
+                        print("✅ Успешный выход пользователя (роль USER)")
+
+                        try await Task.sleep(nanoseconds: 2_500_000_000)
+
+                        self.navigateToLoginScreen()
+                    } catch {
+                        print("❌ Ошибка выхода: \(error.localizedDescription)")
+                    }
+                }
+            } else {
+                DispatchQueue.main.async {
                     self.onLoginSuccess?()
                 }
             }
         } catch {
-            print("Ошибка входа: \(error.localizedDescription)")
+            print("❌ Ошибка входа: \(error.localizedDescription)")
         }
     }
 
@@ -53,9 +73,7 @@ final class AuthViewModel: AuthViewModelProtocol {
             preferredStyle: .alert
         )
 
-        alert.addAction(UIAlertAction(title: "OK", style: .default, handler: { _ in
-            self.navigateToLoginScreen()
-        }))
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
 
         DispatchQueue.main.async {
             if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
@@ -72,7 +90,8 @@ final class AuthViewModel: AuthViewModelProtocol {
                let window = scene.windows.first {
                 let authVC = AuthViewController(viewModel: AuthViewModel(
                     loginUseCase: LoginUseCase(authRepository: AuthRepositoryImpl()),
-                    getInfoUseCase: GetInfoUseCase(userRepository: UserRepositoryImpl()) 
+                    getInfoUseCase: GetInfoUseCase(userRepository: UserRepositoryImpl()),
+                    logoutUseCase: LogoutUseCase(authRepository: AuthRepositoryImpl())
                 ))
 
                 window.rootViewController = authVC

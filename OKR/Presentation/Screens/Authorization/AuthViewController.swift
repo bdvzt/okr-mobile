@@ -136,7 +136,7 @@ final class AuthViewController: UIViewController {
 
         let authViewModel = AuthViewModel(
             loginUseCase: LoginUseCase(authRepository: AuthRepositoryImpl()),
-            getInfoUseCase: GetInfoUseCase(userRepository: UserRepositoryImpl()) // ✅ Передаем новый юз-кейс
+            getInfoUseCase: GetInfoUseCase(userRepository: UserRepositoryImpl()), logoutUseCase: LogoutUseCase(authRepository: AuthRepositoryImpl())
         )
 
         window.rootViewController = TabBarController()
@@ -145,7 +145,7 @@ final class AuthViewController: UIViewController {
 
     private func navigateToRegister() {
         let registerVC = RegistrationViewController(
-            viewModel: RegistrationViewModel(registerUseCase: RegisterUseCase(authRepository: AuthRepositoryImpl()))
+            viewModel: RegistrationViewModel(registerUseCase: RegisterUseCase(authRepository: AuthRepositoryImpl()), logoutUseCase: LogoutUseCase(authRepository: AuthRepositoryImpl()))
         )
         registerVC.modalPresentationStyle = .fullScreen
         present(registerVC, animated: true)

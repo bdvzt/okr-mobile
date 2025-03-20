@@ -197,7 +197,7 @@ final class RegistrationViewController: UIViewController {
 
         let authViewModel = AuthViewModel(
             loginUseCase: LoginUseCase(authRepository: AuthRepositoryImpl()),
-            getInfoUseCase: GetInfoUseCase(userRepository: UserRepositoryImpl()) // ✅ Добавлен use case получения профиля
+            getInfoUseCase: GetInfoUseCase(userRepository: UserRepositoryImpl()), logoutUseCase: LogoutUseCase(authRepository: AuthRepositoryImpl())
         )
 
         let authVC = AuthViewController(viewModel: authViewModel)
