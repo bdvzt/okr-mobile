@@ -9,18 +9,18 @@ import UIKit
 import SnapKit
 
 final class ProfileViewController: UIViewController {
-    
+
     private let viewModel: ProfileViewModelProtocol
-    
+
     init(viewModel: ProfileViewModelProtocol) {
         self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
     }
-    
+
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    
+
     private let profileInfoLabel: UILabel = {
         let label = UILabel()
         label.text = "Загрузка..."
@@ -30,7 +30,7 @@ final class ProfileViewController: UIViewController {
         label.textColor = .black
         return label
     }()
-    
+
     private let logoutButton: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle("Выйти", for: .normal)
@@ -38,16 +38,16 @@ final class ProfileViewController: UIViewController {
         button.titleLabel?.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
         return button
     }()
-    
+
     private let requestsScrollView = UIScrollView()
-    
+
     private let requestsStackView: UIStackView = {
         let stack = UIStackView()
         stack.axis = .vertical
         stack.spacing = 12
         return stack
     }()
-    
+
     private let refreshButton: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle("Обновить", for: .normal)
@@ -56,7 +56,7 @@ final class ProfileViewController: UIViewController {
         button.addTarget(self, action: #selector(refreshProfile), for: .touchUpInside)
         return button
     }()
-    
+
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .white
@@ -65,7 +65,7 @@ final class ProfileViewController: UIViewController {
         loadProfile()
         logoutButton.addTarget(self, action: #selector(logoutAction), for: .touchUpInside)
     }
-    
+
     private func setupViews() {
         view.addSubview(profileInfoLabel)
         view.addSubview(requestsScrollView)
@@ -73,37 +73,37 @@ final class ProfileViewController: UIViewController {
         view.addSubview(refreshButton)
         requestsScrollView.addSubview(requestsStackView)
     }
-    
+
     private func setupConstraints() {
         profileInfoLabel.snp.makeConstraints { make in
             make.top.equalTo(view.safeAreaLayoutGuide).offset(20)
             make.leading.trailing.equalToSuperview().inset(20)
         }
-        
+
         refreshButton.snp.makeConstraints { make in
             make.top.equalTo(profileInfoLabel.snp.bottom).offset(10)
             make.centerX.equalToSuperview()
             make.height.equalTo(44)
         }
-        
+
         requestsScrollView.snp.makeConstraints { make in
             make.top.equalTo(refreshButton.snp.bottom).offset(20)
             make.leading.trailing.equalToSuperview().inset(20)
             make.bottom.equalTo(logoutButton.snp.top).offset(-20)
         }
-        
+
         requestsStackView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
             make.width.equalToSuperview()
         }
-        
+
         logoutButton.snp.makeConstraints { make in
             make.leading.trailing.equalToSuperview().inset(20)
             make.bottom.equalTo(view.safeAreaLayoutGuide).inset(20)
             make.height.equalTo(44)
         }
     }
-    
+
     private func loadProfile() {
         Task {
             do {
@@ -114,48 +114,58 @@ final class ProfileViewController: UIViewController {
             }
         }
     }
-    
+
     private func updateUI(with user: UserDTO) {
         DispatchQueue.main.async {
             self.profileInfoLabel.text = "\(user.firstName) \(user.lastName)\nГруппа: \(user.group)"
             self.populateRequests(user.requestList)
         }
     }
-    
+
     private func populateRequests(_ requests: [RequestDTO]) {
         requestsStackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
-        
+
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd"
-        
+
         for request in requests {
             let requestView = RequestComponent()
-            
+
             if let startDate = dateFormatter.date(from: request.startedSkipping),
                let endDate = dateFormatter.date(from: request.finishedSkipping) {
                 requestView.configure(startDate: startDate, endDate: endDate, status: request.status)
                 requestView.setRequestId(request.id)  // ✅ Устанавливаем ID правильно
             }
-            
+
             requestView.setEditAction(target: self, action: #selector(openRequestDetail(_:)))
-            
+
             requestsStackView.addArrangedSubview(requestView)
         }
     }
-    
+
     @objc private func openRequestDetail(_ sender: UIButton) {
         let requestId = sender.tag  // ✅ Теперь всегда корректный ID
-        print("📌 Открытие заявки с ID: \(requestId)")  // Добавляем лог для отладки
-        
+        print("📌 Открытие заявки с ID: \(requestId)")  // Лог для отладки
+
+        // 1️⃣ Создаём репозиторий
         let requestRepository = RequestRepositoryImpl()
+
+        // 2️⃣ Создаём UseCases
         let getRequestInfoUseCase = GetRequestInfoUseCase(requestRepository: requestRepository)
-        let requestDetailVM = RequestDetailViewModel(getRequestInfoUseCase: getRequestInfoUseCase)
-        
+        let uploadFileUseCase = UploadFileUseCase(requestRepository: requestRepository)
+
+        // 3️⃣ Создаём ViewModel, передавая оба UseCase
+        let requestDetailVM = RequestDetailViewModel(
+            getRequestInfoUseCase: getRequestInfoUseCase,
+            uploadFileUseCase: uploadFileUseCase  // ✅ Теперь передаём
+        )
+
+        // 4️⃣ Создаём и показываем экран деталей заявки
         let requestDetailVC = RequestDetailViewController(requestId: requestId, viewModel: requestDetailVM)
         requestDetailVC.modalPresentationStyle = .fullScreen
         present(requestDetailVC, animated: true)
     }
-    
+
     private func showError(_ message: String) {
         DispatchQueue.main.async {
             let alert = UIAlertController(title: "Ошибка", message: message, preferredStyle: .alert)
@@ -163,7 +173,7 @@ final class ProfileViewController: UIViewController {
             self.present(alert, animated: true)
         }
     }
-    
+
     @objc private func logoutAction() {
         Task {
             await viewModel.logout()
@@ -173,14 +183,14 @@ final class ProfileViewController: UIViewController {
                     let authVC = AuthViewController(viewModel: AuthViewModel(
                         loginUseCase: LoginUseCase(authRepository: AuthRepositoryImpl())
                     ))
-                    
+
                     window.rootViewController = authVC
                     window.makeKeyAndVisible()
                 }
             }
         }
     }
-    
+
     @objc private func refreshProfile() {
         loadProfile()
     }

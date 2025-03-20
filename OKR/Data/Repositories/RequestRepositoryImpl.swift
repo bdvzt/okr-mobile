@@ -64,18 +64,17 @@ final class RequestRepositoryImpl: RequestRepository {
     }
 
     func uploadFile(requestId: Int, file: Data, fileName: String, mimeType: String) async throws {
-        let boundary = "Boundary-\(UUID().uuidString)"
-        var body = Data()
+        let uploadURL = URL(string: "http://95.182.120.75:8081/request/upload/\(requestId)")!
 
-        body.append("--\(boundary)\r\n".data(using: .utf8)!)
-        body.append("Content-Disposition: form-data; name=\"file\"; filename=\"\(fileName)\"\r\n".data(using: .utf8)!)
-        body.append("Content-Type: \(mimeType)\r\n\r\n".data(using: .utf8)!)
-        body.append(file)
-        body.append("\r\n".data(using: .utf8)!)
-        body.append("--\(boundary)--\r\n".data(using: .utf8)!)
+        print("📡 Загрузка файла \(fileName) в заявку ID: \(requestId) с MIME-типом \(mimeType)")
 
-        let config = RequestNetworkConfig.uploadFile(requestId: requestId, file: body)
-        _ = try await networkService.requestRaw(config: config, authorized: true)
+        try await networkService.uploadFileRequest(
+            url: uploadURL,
+            fileData: file,
+            fileName: fileName,
+            mimeType: mimeType,
+            authorized: true
+        )
     }
 
     func unpinFile(requestId: Int, fileId: Int) async throws {

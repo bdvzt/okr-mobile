@@ -7,8 +7,9 @@
 
 import UIKit
 import SnapKit
+import UniformTypeIdentifiers
 
-final class RequestDetailViewController: UIViewController {
+final class RequestDetailViewController: UIViewController, UIDocumentPickerDelegate {
 
     private let viewModel: RequestDetailViewModelProtocol
     private let requestId: Int
@@ -33,6 +34,26 @@ final class RequestDetailViewController: UIViewController {
     }()
 
     private let requestView = RequestComponent()
+
+    private let uploadButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.setTitle("Загрузить файл", for: .normal)
+        button.setTitleColor(.white, for: .normal)
+        button.backgroundColor = .systemBlue
+        button.layer.cornerRadius = 8
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
+        button.addTarget(self, action: #selector(selectFile), for: .touchUpInside)
+        return button
+    }()
+
+    private let filesScrollView = UIScrollView()
+    private let filesStackView: UIStackView = {
+        let stack = UIStackView()
+        stack.axis = .vertical
+        stack.spacing = 12
+        return stack
+    }()
+
 
     // MARK: - Init
     init(requestId: Int, viewModel: RequestDetailViewModelProtocol) {
@@ -59,6 +80,9 @@ final class RequestDetailViewController: UIViewController {
         view.addSubview(titleLabel)
         view.addSubview(closeButton)
         view.addSubview(requestView)
+        view.addSubview(uploadButton)
+        view.addSubview(filesScrollView)
+        filesScrollView.addSubview(filesStackView)
     }
 
     private func setupConstraints() {
@@ -77,6 +101,23 @@ final class RequestDetailViewController: UIViewController {
             make.leading.trailing.equalToSuperview().inset(20)
             make.height.equalTo(60)
         }
+
+        uploadButton.snp.makeConstraints { make in
+            make.top.equalTo(requestView.snp.bottom).offset(20)
+            make.leading.trailing.equalToSuperview().inset(20)
+            make.height.equalTo(44)
+        }
+
+        filesScrollView.snp.makeConstraints { make in
+            make.top.equalTo(uploadButton.snp.bottom).offset(20)
+            make.leading.trailing.equalToSuperview().inset(20)
+            make.bottom.equalTo(view.safeAreaLayoutGuide).inset(20)
+        }
+
+        filesStackView.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
+            make.width.equalToSuperview()
+        }
     }
 
     // MARK: - Load Data
@@ -92,14 +133,93 @@ final class RequestDetailViewController: UIViewController {
                        let endDate = formatter.date(from: request.finishedSkipping) {
                         self.requestView.configure(startDate: startDate, endDate: endDate, status: request.status)
                     }
+
+                    // ✅ Теперь файлы загружаются и отображаются
+                    self.displayFiles(request.files)
                 }
             } catch {
                 print("❌ Ошибка загрузки деталей заявки: \(error.localizedDescription)")
             }
         }
     }
+    private func displayFiles(_ files: [FileInfoDTO]) {
+        print("📂 Загружено файлов: \(files.count)") // ✅ Проверяем, сколько файлов приходит
+
+        filesStackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
+
+        for file in files {
+            print("📄 Добавление файла: \(file.fileName)") // ✅ Проверяем имена файлов
+
+            let fileComponent = FileComponent()
+            fileComponent.configure(fileId: file.id, fileName: file.fileName) { fileId in
+                self.deleteFile(fileId: fileId)
+            }
+            filesStackView.addArrangedSubview(fileComponent)
+        }
+
+        // ✅ Включаем `isHidden = false` на всякий случай
+        filesScrollView.isHidden = files.isEmpty
+    }
+
 
     @objc private func dismissView() {
         dismiss(animated: true, completion: nil)
+    }
+
+    // MARK: - File Upload
+    @objc private func selectFile() {
+        let documentPicker = UIDocumentPickerViewController(forOpeningContentTypes: [UTType.pdf, UTType.image])
+        documentPicker.delegate = self
+        documentPicker.allowsMultipleSelection = false
+        present(documentPicker, animated: true)
+    }
+
+    func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
+        guard let fileURL = urls.first else { return }
+
+        do {
+            let fileData = try Data(contentsOf: fileURL)
+            let fileName = fileURL.lastPathComponent
+            let mimeType = getMimeType(for: fileURL)
+
+            print("📂 Выбран файл: \(fileName), MIME: \(mimeType)")
+
+            Task {
+                do {
+                    try await viewModel.uploadFile(requestId: requestId, file: fileData, fileName: fileName, mimeType: mimeType)
+                    DispatchQueue.main.async {
+                        self.showAlert(title: "Успех", message: "Файл успешно загружен!")
+                    }
+                } catch {
+                    print("❌ Ошибка загрузки файла: \(error.localizedDescription)")
+                    self.showAlert(title: "Ошибка", message: "Не удалось загрузить файл.")
+                }
+            }
+        } catch {
+            print("❌ Ошибка чтения файла: \(error.localizedDescription)")
+            showAlert(title: "Ошибка", message: "Не удалось прочитать файл.")
+        }
+    }
+
+    // Функция определения MIME-типа по URL
+    private func getMimeType(for url: URL) -> String {
+        let pathExtension = url.pathExtension.lowercased()
+        switch pathExtension {
+        case "pdf": return "application/pdf"
+        case "jpg", "jpeg": return "image/jpeg"
+        case "png": return "image/png"
+        case "txt": return "text/plain"
+        default: return "application/octet-stream"
+        }
+    }
+
+    private func showAlert(title: String, message: String) {
+        let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        present(alert, animated: true)
+    }
+
+    private func deleteFile(fileId: Int) {
+        print("🚀 Удаление файла с ID: \(fileId)") // Пока только лог
     }
 }
