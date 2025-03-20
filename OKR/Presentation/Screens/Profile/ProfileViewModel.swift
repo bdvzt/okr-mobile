@@ -7,13 +7,16 @@
 
 protocol ProfileViewModelProtocol: AnyObject {
     func logout() async
+    func getInfo() async throws -> UserDTO
 }
 
 final class ProfileViewModel: ProfileViewModelProtocol {
     private let logoutUseCase: LogoutUseCaseProtocol
+    private let getInfoUseCase: GetInfoUseCaseProtocol
 
-    init(logoutUseCase: LogoutUseCaseProtocol) {
+    init(logoutUseCase: LogoutUseCaseProtocol, getInfoUseCase: GetInfoUseCaseProtocol) {
         self.logoutUseCase = logoutUseCase
+        self.getInfoUseCase = getInfoUseCase
     }
 
     func logout() async {
@@ -23,5 +26,9 @@ final class ProfileViewModel: ProfileViewModelProtocol {
         } catch {
             print("Ошибка выхода: \(error.localizedDescription)")
         }
+    }
+
+    func getInfo() async throws -> UserDTO {
+        return try await getInfoUseCase.execute()
     }
 }

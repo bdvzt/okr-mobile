@@ -33,7 +33,7 @@ class TabBarController: UITabBarController {
             viewModel: ProfileViewModel(
                 logoutUseCase: LogoutUseCase(
                     authRepository: AuthRepositoryImpl()
-                )
+                ), getInfoUseCase: GetInfoUseCase(userRepository: UserRepositoryImpl())
             )
         )
         )

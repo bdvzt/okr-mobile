@@ -10,11 +10,7 @@ import Foundation
 final class AuthRepositoryImpl: AuthRepository {
     private let tokenStorage = TokenStorage()
     private let networkService: NetworkServiceProtocol = NetworkService()
-
-    var isAuthorized: Bool {
-        tokenStorage.retrieveToken() != nil
-    }
-
+    
     func register(user: UserRegistration) async throws {
         do {
             let data = try JSONEncoder().encode(user)

@@ -10,10 +10,10 @@ import SnapKit
 
 final class ProfileViewController: UIViewController {
 
-    // MARK: - Свойства
+    // MARK: - Properties
     private let viewModel: ProfileViewModelProtocol
 
-    // MARK: - Инициализация
+    // MARK: - Inits
     init(viewModel: ProfileViewModelProtocol) {
         self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
@@ -23,11 +23,11 @@ final class ProfileViewController: UIViewController {
         fatalError("init(coder:) has not been implemented")
     }
 
-    // MARK: - UI Элементы
+    // MARK: - UI Components
 
     private let profileInfoLabel: UILabel = {
         let label = UILabel()
-        label.text = "Иван\nИванов"
+        label.text = "Загрузка..."
         label.numberOfLines = 2
         label.font = UIFont.systemFont(ofSize: 28, weight: .bold)
         label.textAlignment = .center
@@ -63,7 +63,7 @@ final class ProfileViewController: UIViewController {
         view.backgroundColor = .white
         setupViews()
         setupConstraints()
-        setupDummyRequests()
+        loadProfile()  // Загружаем данные профиля
         logoutButton.addTarget(self, action: #selector(logoutAction), for: .touchUpInside)
     }
 
@@ -100,23 +100,47 @@ final class ProfileViewController: UIViewController {
         }
     }
 
-    private func setupDummyRequests() {
-        let now = Date()
-        for _ in 0..<3 {
+    // MARK: - User info
+    private func loadProfile() {
+        Task {
+            do {
+                let user = try await viewModel.getInfo()
+                DispatchQueue.main.async {
+                    self.profileInfoLabel.text = "\(user.firstName)\n\(user.lastName)"
+                    self.populateRequests(user.requestList)
+                }
+            } catch {
+                DispatchQueue.main.async {
+                    self.showError(error.localizedDescription)
+                }
+            }
+        }
+    }
+
+    private func populateRequests(_ requests: [RequestDTO]) {
+        requestsStackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
+
+        for request in requests {
             let requestView = RequestComponent()
-            let startDate = now
-            let endDate = Calendar.current.date(byAdding: .day, value: 5, to: now)!
-            requestView.configure(startDate: startDate, endDate: endDate, status: .pending)
+            if let startDate = ISO8601DateFormatter().date(from: request.startedSkipping),
+               let endDate = ISO8601DateFormatter().date(from: request.finishedSkipping) {
+                requestView.configure(startDate: startDate, endDate: endDate, status: .pending)
+            }
             requestsStackView.addArrangedSubview(requestView)
         }
     }
 
-    // MARK: - Действия
+    private func showError(_ message: String) {
+        let alert = UIAlertController(title: "Ошибка", message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        present(alert, animated: true)
+    }
+
+    // MARK: - Actions
 
     @objc private func logoutAction() {
         Task {
             await viewModel.logout()
-
             DispatchQueue.main.async {
                 if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
                    let window = scene.windows.first {
@@ -131,4 +155,5 @@ final class ProfileViewController: UIViewController {
         }
     }
 }
+
 
