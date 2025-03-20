@@ -18,7 +18,7 @@ struct UserDTO: Decodable {
         if let studentGroup = studentGroup, let groupEnum = Group(rawValue: studentGroup) {
             return groupEnum.displayName
         } else {
-            return "Не указана"
+            return "не указана"
         }
     }
 }

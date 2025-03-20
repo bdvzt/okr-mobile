@@ -11,7 +11,6 @@ enum RequestNetworkConfig: NetworkConfig {
     case createRequest(Data)
     case uploadFile(requestId: Int, file: Data)
     case extendDateRequest(id: Int, data: Data)
-    case downloadFile(fileId: Int)
     case unpinConfirmationFile(requestId: Int, fileId: Int)
     case getRequestInfo(requestId: Int)
 
@@ -27,8 +26,6 @@ enum RequestNetworkConfig: NetworkConfig {
             return "\(Constants.Endpoint.uploadFile)\(requestId)"
         case let .extendDateRequest(id, _):
             return "\(Constants.Endpoint.extendDateRequest)\(id)"
-        case let .downloadFile(fileId):
-            return "\(Constants.Endpoint.downloadFile)\(fileId)"
         case let .unpinConfirmationFile(requestId, fileId):
             return "\(Constants.Endpoint.unpinConfirmationFile)\(requestId)/\(fileId)"
         case let .getRequestInfo(requestId):
@@ -42,7 +39,7 @@ enum RequestNetworkConfig: NetworkConfig {
             return .post
         case .extendDateRequest:
             return .patch
-        case .downloadFile, .getRequestInfo:
+        case .getRequestInfo:
             return .get
         case .unpinConfirmationFile:
             return .delete
@@ -56,7 +53,7 @@ enum RequestNetworkConfig: NetworkConfig {
             return .requestBody(data)
         case let .uploadFile(_, file):
             return .requestBody(file)
-        case .downloadFile, .unpinConfirmationFile, .getRequestInfo:
+        case .unpinConfirmationFile, .getRequestInfo:
             return .request
         }
     }
@@ -72,7 +69,6 @@ private extension RequestNetworkConfig {
             static let createRequest = ""
             static let uploadFile = "/upload/"
             static let extendDateRequest = "/"
-            static let downloadFile = "/files/"
             static let unpinConfirmationFile = "/file/unpin/"
             static let getRequestInfo = "/info/"
         }

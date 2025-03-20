@@ -15,7 +15,6 @@ protocol NetworkServiceProtocol {
 
 final class NetworkService: NetworkServiceProtocol {
     private let baseURL = URL(string: "http://95.182.120.75:8081/")!
-    //    private let baseURL = URL(string: "http://localhost:8080/swagger-ui/index.html#/")!
     //    private let baseURL = URL(string: "http://localhost:8080/")!
     private let tokenStorage = TokenStorage()
     
@@ -69,7 +68,6 @@ final class NetworkService: NetworkServiceProtocol {
         let boundary = "Boundary-\(UUID().uuidString)"
         var body = Data()
 
-        // 🔹 Формируем `multipart/form-data` тело запроса
         body.append("--\(boundary)\r\n".data(using: .utf8)!)
         body.append("Content-Disposition: form-data; name=\"file\"; filename=\"\(fileName)\"\r\n".data(using: .utf8)!)
         body.append("Content-Type: \(mimeType)\r\n\r\n".data(using: .utf8)!)
@@ -77,7 +75,6 @@ final class NetworkService: NetworkServiceProtocol {
         body.append("\r\n".data(using: .utf8)!)
         body.append("--\(boundary)--\r\n".data(using: .utf8)!)
 
-        // 🔹 Формируем `URLRequest`
         var urlRequest = URLRequest(url: url)
         urlRequest.httpMethod = "POST"
         urlRequest.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
@@ -88,18 +85,16 @@ final class NetworkService: NetworkServiceProtocol {
 
         urlRequest.httpBody = body
 
-        // 🔹 Выполняем запрос
         let (data, response) = try await URLSession.shared.data(for: urlRequest)
 
-        // 🔹 Проверяем статус-код ответа
         guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
             let errorMessage = String(data: data, encoding: .utf8) ?? "Нет данных"
-            print("❌ Ошибка загрузки файла: \(errorMessage)")
+            print("Ошибка загрузки файла: \(errorMessage)")
             throw NSError(domain: "ServerError", code: (response as? HTTPURLResponse)?.statusCode ?? -1, userInfo: [
                 NSLocalizedDescriptionKey: "Ошибка загрузки файла: \(errorMessage)"
             ])
         }
 
-        print("✅ Файл успешно загружен: \(fileName)")
+        print("Файл успешно загружен: \(fileName)")
     }
 }

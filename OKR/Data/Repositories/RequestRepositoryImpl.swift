@@ -46,17 +46,14 @@ final class RequestRepositoryImpl: RequestRepository {
 
     func getRequestInfo(requestId: Int) async throws -> RequestDetailsDTO {
         let config = RequestNetworkConfig.getRequestInfo(requestId: requestId)
-        print("🔗 URL: \(config.path + config.endPoint)")
-        print("🆔 ID заявки: \(requestId)")
-        print("📌 HTTP Метод: \(config.method.rawValue)")
+
         let responseData = try await networkService.requestRaw(config: config, authorized: true)
         do {
             let decodedResponse = try JSONDecoder().decode(RequestDetailsDTO.self, from: responseData)
-            print("✅ Получена информация о заявке: \(decodedResponse)")
             return decodedResponse
         } catch {
             let responseString = String(data: responseData, encoding: .utf8) ?? "Неизвестный ответ"
-            print("❌ Ошибка декодирования JSON: \(error.localizedDescription), ответ сервера: \(responseString)")
+            print("Ошибка декодирования JSON: \(error.localizedDescription), ответ сервера: \(responseString)")
             throw NSError(domain: "RequestError", code: -1, userInfo: [
                 NSLocalizedDescriptionKey: "Ошибка декодирования JSON: \(error.localizedDescription)"
             ])
@@ -65,8 +62,6 @@ final class RequestRepositoryImpl: RequestRepository {
 
     func uploadFile(requestId: Int, file: Data, fileName: String, mimeType: String) async throws {
         let uploadURL = URL(string: "http://95.182.120.75:8081/request/upload/\(requestId)")!
-
-        print("📡 Загрузка файла \(fileName) в заявку ID: \(requestId) с MIME-типом \(mimeType)")
 
         try await networkService.uploadFileRequest(
             url: uploadURL,
@@ -80,16 +75,12 @@ final class RequestRepositoryImpl: RequestRepository {
     func unpinFile(requestId: Int, fileId: Int) async throws {
         let config = RequestNetworkConfig.unpinConfirmationFile(requestId: requestId, fileId: fileId)
 
-        print("🚀 Открепление файла ID: \(fileId) из заявки ID: \(requestId)")
-        print("🔗 URL: \(config.path + config.endPoint)")
-        print("📌 HTTP Метод: \(config.method.rawValue)")
-
         let responseData = try await networkService.requestRaw(config: config, authorized: true)
 
         if let responseString = String(data: responseData, encoding: .utf8) {
-            print("✅ Файл откреплен успешно: \(responseString)")
+            print("Файл откреплен успешно: \(responseString)")
         } else {
-            print("❌ Ошибка: Сервер вернул некорректный ответ при откреплении файла")
+            print("Ошибка: Сервер вернул некорректный ответ при откреплении файла")
         }
     }
 }

@@ -36,7 +36,6 @@ final class RegistrationViewModel: RegistrationViewModelProtocol {
 
         do {
             try await registerUseCase.execute(user: user)
-            print("✅ Успешная регистрация")
 
             DispatchQueue.main.async {
                 self.onRegisterSuccess?()
@@ -45,17 +44,16 @@ final class RegistrationViewModel: RegistrationViewModelProtocol {
             Task {
                 do {
                     try await self.logoutUseCase.execute()
-                    print("✅ Успешный выход после регистрации")
 
                     try await Task.sleep(nanoseconds: 2_500_000_000)
 
                     self.navigateToLogin()
                 } catch {
-                    print("❌ Ошибка выхода: \(error.localizedDescription)")
+                    print("Ошибка выхода: \(error.localizedDescription)")
                 }
             }
         } catch {
-            print("❌ Ошибка регистрации: \(error.localizedDescription)")
+            print("Ошибка регистрации: \(error.localizedDescription)")
         }
     }
 

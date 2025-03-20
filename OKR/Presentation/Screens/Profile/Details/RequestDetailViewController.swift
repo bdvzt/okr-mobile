@@ -142,7 +142,7 @@ final class RequestDetailViewController: UIViewController, UIDocumentPickerDeleg
                     self.displayFiles(request.files)
                 }
             } catch {
-                print("❌ Ошибка загрузки деталей заявки: \(error.localizedDescription)")
+                print("Ошибка загрузки деталей заявки: \(error.localizedDescription)")
             }
         }
     }
@@ -152,7 +152,6 @@ final class RequestDetailViewController: UIViewController, UIDocumentPickerDeleg
         filesStackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
 
         for file in files {
-            print("📄 Добавление файла: \(file.fileName)")
 
             let fileComponent = FileComponent()
             fileComponent.configure(fileId: file.id, fileName: file.fileName) { fileId in
@@ -185,8 +184,6 @@ final class RequestDetailViewController: UIViewController, UIDocumentPickerDeleg
             let fileName = fileURL.lastPathComponent
             let mimeType = getMimeType(for: fileURL)
 
-            print("📂 Выбран файл: \(fileName), MIME: \(mimeType)")
-
             Task {
                 do {
                     try await viewModel.uploadFile(requestId: requestId, file: fileData, fileName: fileName, mimeType: mimeType)
@@ -194,12 +191,10 @@ final class RequestDetailViewController: UIViewController, UIDocumentPickerDeleg
                         self.showAlert(title: "Успех", message: "Файл успешно загружен!")
                     }
                 } catch {
-                    print("❌ Ошибка загрузки файла: \(error.localizedDescription)")
                     self.showAlert(title: "Ошибка", message: "Не удалось загрузить файл.")
                 }
             }
         } catch {
-            print("❌ Ошибка чтения файла: \(error.localizedDescription)")
             showAlert(title: "Ошибка", message: "Не удалось прочитать файл.")
         }
     }
@@ -238,7 +233,7 @@ final class RequestDetailViewController: UIViewController, UIDocumentPickerDeleg
                         self.loadRequestDetails()
                     }
                 } catch {
-                    print("❌ Ошибка удаления файла: \(error.localizedDescription)")
+                    print("Ошибка удаления файла: \(error.localizedDescription)")
                     self.showAlert(title: "Ошибка", message: "Не удалось удалить файл.")
                 }
             }

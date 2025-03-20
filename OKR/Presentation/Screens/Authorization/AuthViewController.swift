@@ -121,9 +121,28 @@ final class AuthViewController: UIViewController {
 
     @objc private func didTapLoginButton() {
         guard let email = emailInput.text, !email.isEmpty,
-              let password = passwordInput.text, !password.isEmpty else { return }
+              let password = passwordInput.text, !password.isEmpty else {
+            showAlert(title: "Ошибка", message: "Заполните все поля")
+            return
+        }
+
+        if !Validator.isValidEmail(email) {
+            showAlert(title: "Ошибка", message: "Введите корректный Email.")
+            return
+        }
+
+        if !Validator.isValidPassword(password) {
+            showAlert(title: "Ошибка", message: "Некорректный пароль. Он должен содержать минимум 8 символов, включая заглавную и строчную букву, цифру и один из символов !?.")
+            return
+        }
 
         Task { await viewModel.login(email: email, password: password) }
+    }
+
+    private func showAlert(title: String, message: String) {
+        let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        present(alert, animated: true)
     }
 
     @objc private func didTapRegButton() {

@@ -139,9 +139,9 @@ final class ProfileViewController: UIViewController {
                     status: request.status,
                     requestId: request.id
                 ) { [weak self] in
-                    let button = UIButton() // Создаем кнопку
-                    button.tag = request.id // Устанавливаем tag, равный requestId
-                    self?.openRequestDetail(button) // Передаем кнопку
+                    let button = UIButton()
+                    button.tag = request.id
+                    self?.openRequestDetail(button)
                 }
             }
 

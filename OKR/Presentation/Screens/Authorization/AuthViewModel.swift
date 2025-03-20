@@ -43,17 +43,15 @@ final class AuthViewModel: AuthViewModelProtocol {
                     self.showPendingRoleAlert()
                 }
 
-                // Выполняем выход асинхронно в фоне, без блокировки главного потока
                 Task {
                     do {
                         try await self.logoutUseCase.execute()
-                        print("✅ Успешный выход пользователя (роль USER)")
 
                         try await Task.sleep(nanoseconds: 2_500_000_000)
 
                         self.navigateToLoginScreen()
                     } catch {
-                        print("❌ Ошибка выхода: \(error.localizedDescription)")
+                        print("Ошибка выхода: \(error.localizedDescription)")
                     }
                 }
             } else {
@@ -62,7 +60,7 @@ final class AuthViewModel: AuthViewModelProtocol {
                 }
             }
         } catch {
-            print("❌ Ошибка входа: \(error.localizedDescription)")
+            print("Ошибка входа: \(error.localizedDescription)")
         }
     }
 

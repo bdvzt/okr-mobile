@@ -18,7 +18,6 @@ final class AuthRepositoryImpl: AuthRepository {
         let tokenResponse: TokenResponse = try await networkService.request(config: config, authorized: false)
         let token = tokenResponse.token.trimmingCharacters(in: .whitespacesAndNewlines)
 
-        print("Полученный токен при регистрации: \(token)")
         tokenStorage.saveToken(token)
 
         return tokenResponse
@@ -31,7 +30,6 @@ final class AuthRepositoryImpl: AuthRepository {
         let tokenResponse: TokenResponse = try await networkService.request(config: config, authorized: false)
         let token = tokenResponse.token.trimmingCharacters(in: .whitespacesAndNewlines)
 
-        print("✅ Полученный токен: \(token)")
         tokenStorage.saveToken(token)
 
         return tokenResponse
