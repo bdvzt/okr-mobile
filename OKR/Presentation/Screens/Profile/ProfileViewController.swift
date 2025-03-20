@@ -133,11 +133,17 @@ final class ProfileViewController: UIViewController {
 
             if let startDate = dateFormatter.date(from: request.startedSkipping),
                let endDate = dateFormatter.date(from: request.finishedSkipping) {
-                requestView.configure(startDate: startDate, endDate: endDate, status: request.status)
-                requestView.setRequestId(request.id)  // ✅ Устанавливаем ID правильно
+                requestView.configure(
+                    startDate: startDate,
+                    endDate: endDate,
+                    status: request.status,
+                    requestId: request.id
+                ) { [weak self] in
+                    let button = UIButton() // Создаем кнопку
+                    button.tag = request.id // Устанавливаем tag, равный requestId
+                    self?.openRequestDetail(button) // Передаем кнопку
+                }
             }
-
-            requestView.setEditAction(target: self, action: #selector(openRequestDetail(_:)))
 
             requestsStackView.addArrangedSubview(requestView)
         }
@@ -151,11 +157,13 @@ final class ProfileViewController: UIViewController {
         let getRequestInfoUseCase = GetRequestInfoUseCase(requestRepository: requestRepository)
         let uploadFileUseCase = UploadFileUseCase(requestRepository: requestRepository)
         let unpinFileUseCase = UnpinFileUseCase(requestRepository: requestRepository)
+        let extendRequestUseCase = ExtendRequestUseCase(requestRepository: requestRepository)
 
         let requestDetailVM = RequestDetailViewModel(
             getRequestInfoUseCase: getRequestInfoUseCase,
             uploadFileUseCase: uploadFileUseCase,
-            unpinFileUseCase: unpinFileUseCase
+            unpinFileUseCase: unpinFileUseCase,
+            extendRequestUseCase: extendRequestUseCase
         )
 
         let requestDetailVC = RequestDetailViewController(requestId: requestId, viewModel: requestDetailVM)

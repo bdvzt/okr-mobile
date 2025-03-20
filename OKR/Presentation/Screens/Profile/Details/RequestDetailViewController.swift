@@ -14,6 +14,9 @@ final class RequestDetailViewController: UIViewController, UIDocumentPickerDeleg
     private let viewModel: RequestDetailViewModelProtocol
     private let requestId: Int
 
+    private var datePickerView: UIView?
+    private var selectedDatePicker: UIDatePicker?
+
     // MARK: - UI Components
     private let titleLabel: UILabel = {
         let label = UILabel()
@@ -131,7 +134,9 @@ final class RequestDetailViewController: UIViewController, UIDocumentPickerDeleg
 
                     if let startDate = formatter.date(from: request.startedSkipping),
                        let endDate = formatter.date(from: request.finishedSkipping) {
-                        self.requestView.configure(startDate: startDate, endDate: endDate, status: request.status)
+                        self.requestView.configure(startDate: startDate, endDate: endDate, status: request.status, requestId: self.requestId) {
+                            self.presentDatePicker()
+                        }
                     }
 
                     self.displayFiles(request.files)
@@ -240,5 +245,86 @@ final class RequestDetailViewController: UIViewController, UIDocumentPickerDeleg
         }))
 
         present(alert, animated: true)
+    }
+
+    private func presentDatePicker() {
+        let datePickerView = UIView()
+        datePickerView.backgroundColor = .white
+        datePickerView.layer.cornerRadius = 12
+
+        let datePicker = UIDatePicker()
+        datePicker.datePickerMode = .date
+        datePicker.preferredDatePickerStyle = .wheels
+        datePicker.minimumDate = Date()
+
+        let confirmButton = UIButton(type: .system)
+        confirmButton.setTitle("Продлить", for: .normal)
+        confirmButton.setTitleColor(.white, for: .normal)
+        confirmButton.backgroundColor = .systemBlue
+        confirmButton.layer.cornerRadius = 8
+        confirmButton.titleLabel?.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
+        confirmButton.addTarget(self, action: #selector(confirmExtension(_:)), for: .touchUpInside)
+
+        let cancelButton = UIButton(type: .system)
+        cancelButton.setTitle("Отмена", for: .normal)
+        cancelButton.setTitleColor(.systemRed, for: .normal)
+        cancelButton.titleLabel?.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
+        cancelButton.addTarget(self, action: #selector(dismissDatePicker), for: .touchUpInside)
+
+        let stackView = UIStackView(arrangedSubviews: [datePicker, confirmButton, cancelButton])
+        stackView.axis = .vertical
+        stackView.spacing = 12
+        stackView.alignment = .fill
+
+        datePickerView.addSubview(stackView)
+
+        stackView.snp.makeConstraints { make in
+            make.edges.equalToSuperview().inset(20)
+        }
+
+        let modalVC = UIViewController()
+        modalVC.view.backgroundColor = UIColor.black.withAlphaComponent(0.3)
+        modalVC.modalPresentationStyle = .overFullScreen
+
+        modalVC.view.addSubview(datePickerView)
+
+        datePickerView.snp.makeConstraints { make in
+            make.center.equalToSuperview()
+            make.width.equalToSuperview().multipliedBy(0.9)
+        }
+
+        self.datePickerView = datePickerView
+        self.selectedDatePicker = datePicker
+
+        present(modalVC, animated: true)
+    }
+
+    @objc private func dismissDatePicker() {
+        dismiss(animated: true)
+    }
+
+    @objc private func confirmExtension(_ sender: UIButton) {
+        guard let selectedDate = selectedDatePicker?.date else { return }
+
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd"
+
+        let formattedDate = dateFormatter.string(from: selectedDate)
+        let extendRequestDTO = ExtendRequestDateDTO(extendSkipping: formattedDate)
+        
+        Task {
+            do {
+                try await viewModel.extendRequest(id: requestId, date: extendRequestDTO)
+                DispatchQueue.main.async {
+                    self.showAlert(title: "Успех", message: "Дата окончания продлена!")
+                    self.loadRequestDetails()
+                    self.dismiss(animated: true)
+                }
+            } catch {
+                DispatchQueue.main.async {
+                    self.showAlert(title: "Ошибка", message: "Не удалось продлить заявку.")
+                }
+            }
+        }
     }
 }

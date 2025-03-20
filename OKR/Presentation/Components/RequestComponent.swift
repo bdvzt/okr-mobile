@@ -19,6 +19,9 @@ final class RequestComponent: UIView {
         return button
     }()
 
+    private var requestId: Int?
+    private var editAction: (() -> Void)?
+
     override init(frame: CGRect) {
         super.init(frame: frame)
         setupViews()
@@ -40,6 +43,8 @@ final class RequestComponent: UIView {
         stack.snp.makeConstraints { make in
             make.edges.equalToSuperview().inset(8)
         }
+
+        editButton.addTarget(self, action: #selector(editButtonTapped), for: .touchUpInside)
     }
 
     private func styleView() {
@@ -49,41 +54,32 @@ final class RequestComponent: UIView {
         backgroundColor = .white
     }
 
-    func configure(startDate: Date, endDate: Date, status: RequestStatus) {
+    func configure(startDate: Date, endDate: Date, status: RequestStatus, requestId: Int, editAction: @escaping () -> Void) {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
 
         startDateLabel.text = formatter.string(from: startDate)
         endDateLabel.text = formatter.string(from: endDate)
+        self.requestId = requestId
+        self.editAction = editAction
 
         statusLabel.text = {
             switch status {
-            case .pending:
-                return "На проверке"
-            case .accepted:
-                return "Подтверждено"
-            case .rejected:
-                return "Отклонено"
+            case .pending: return "На проверке"
+            case .accepted: return "Подтверждено"
+            case .rejected: return "Отклонено"
             }
         }()
         statusLabel.textColor = {
             switch status {
-            case .pending:
-                return .systemBlue
-            case .accepted:
-                return .systemGreen
-            case .rejected:
-                return .systemRed
+            case .pending: return .systemBlue
+            case .accepted: return .systemGreen
+            case .rejected: return .systemRed
             }
         }()
     }
 
-    func setRequestId(_ id: Int) {
-        editButton.tag = id
-    }
-
-    func setEditAction(target: Any?, action: Selector) {
-        editButton.addTarget(target, action: action, for: .touchUpInside)
+    @objc private func editButtonTapped() {
+        editAction?()
     }
 }
-

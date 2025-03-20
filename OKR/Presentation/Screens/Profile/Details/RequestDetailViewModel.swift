@@ -11,25 +11,29 @@ protocol RequestDetailViewModelProtocol {
     func fetchRequestDetails(requestId: Int) async throws -> RequestDetailsDTO
     func uploadFile(requestId: Int, file: Data, fileName: String, mimeType: String) async throws
     func unpinFile(requestId: Int, fileId: Int) async throws
+    func extendRequest(id: Int, date: ExtendRequestDateDTO) async throws
 }
 
 final class RequestDetailViewModel: RequestDetailViewModelProtocol {
     private let getRequestInfoUseCase: GetRequestInfoUseCaseProtocol
     private let uploadFileUseCase: UploadFileUseCaseProtocol
     private let unpinFileUseCase: UnpinFileUseCaseProtocol
+    private let extendRequestUseCase: ExtendRequestUseCaseProtocol
 
     init(
         getRequestInfoUseCase: GetRequestInfoUseCaseProtocol,
         uploadFileUseCase: UploadFileUseCaseProtocol,
-        unpinFileUseCase: UnpinFileUseCaseProtocol
+        unpinFileUseCase: UnpinFileUseCaseProtocol,
+        extendRequestUseCase: ExtendRequestUseCaseProtocol
     ) {
         self.getRequestInfoUseCase = getRequestInfoUseCase
         self.uploadFileUseCase = uploadFileUseCase
         self.unpinFileUseCase = unpinFileUseCase
+        self.extendRequestUseCase = extendRequestUseCase
     }
 
     func fetchRequestDetails(requestId: Int) async throws -> RequestDetailsDTO {
-        return try await getRequestInfoUseCase.execute(requestId: requestId)
+        try await getRequestInfoUseCase.execute(requestId: requestId)
     }
 
     func uploadFile(requestId: Int, file: Data, fileName: String, mimeType: String) async throws {
@@ -38,5 +42,9 @@ final class RequestDetailViewModel: RequestDetailViewModelProtocol {
 
     func unpinFile(requestId: Int, fileId: Int) async throws {
         try await unpinFileUseCase.execute(requestId: requestId, fileId: fileId)
+    }
+
+    func extendRequest(id: Int, date: ExtendRequestDateDTO) async throws {
+        try await extendRequestUseCase.execute(id: id, date: date)
     }
 }
