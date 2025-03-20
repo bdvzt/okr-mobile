@@ -134,6 +134,11 @@ final class AuthViewController: UIViewController {
         guard let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
               let window = scene.windows.first else { return }
 
+        let authViewModel = AuthViewModel(
+            loginUseCase: LoginUseCase(authRepository: AuthRepositoryImpl()),
+            getInfoUseCase: GetInfoUseCase(userRepository: UserRepositoryImpl()) // ✅ Передаем новый юз-кейс
+        )
+
         window.rootViewController = TabBarController()
         window.makeKeyAndVisible()
     }

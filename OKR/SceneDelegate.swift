@@ -16,8 +16,12 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         guard let windowScene = (scene as? UIWindowScene) else { return }
 
         let authRepository = AuthRepositoryImpl()
+        let userRepository = UserRepositoryImpl()
+
         let loginUseCase = LoginUseCase(authRepository: authRepository)
-        let authViewModel = AuthViewModel(loginUseCase: loginUseCase)
+        let getInfoUseCase = GetInfoUseCase(userRepository: userRepository)
+
+        let authViewModel = AuthViewModel(loginUseCase: loginUseCase, getInfoUseCase: getInfoUseCase)
         let authViewController = AuthViewController(viewModel: authViewModel)
 
         self.window = UIWindow(windowScene: windowScene)

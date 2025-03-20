@@ -186,7 +186,7 @@ final class ProfileViewController: UIViewController {
                 if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
                    let window = scene.windows.first {
                     let authVC = AuthViewController(viewModel: AuthViewModel(
-                        loginUseCase: LoginUseCase(authRepository: AuthRepositoryImpl())
+                        loginUseCase: LoginUseCase(authRepository: AuthRepositoryImpl()), getInfoUseCase: GetInfoUseCase(userRepository: UserRepositoryImpl())
                     ))
 
                     window.rootViewController = authVC
