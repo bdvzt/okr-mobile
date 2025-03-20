@@ -8,7 +8,7 @@
 import Foundation
 
 protocol RequestRepository: AnyObject {
-    func sendRequest(dates: CreateRequestDTO) async throws -> RequestResultDTO
+    func sendRequest(dates: CreateRequestDTO) async throws -> RequestDTO
     func extendRequest(id: Int, date: ExtendRequestDateDTO) async throws
     func uploadFile(requestId: Int, file: Data) async throws
     func unpinFile(requestId: Int, fileId: Int) async throws

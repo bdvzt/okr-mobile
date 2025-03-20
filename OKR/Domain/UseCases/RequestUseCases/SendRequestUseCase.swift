@@ -6,7 +6,7 @@
 //
 
 protocol SendRequestUseCaseProtocol {
-    func execute(dates: CreateRequestDTO) async throws -> RequestResultDTO
+    func execute(dates: CreateRequestDTO) async throws -> RequestDTO
 }
 
 final class SendRequestUseCase: SendRequestUseCaseProtocol {
@@ -16,7 +16,7 @@ final class SendRequestUseCase: SendRequestUseCaseProtocol {
         self.requestRepository = requestRepository
     }
 
-    func execute(dates: CreateRequestDTO) async throws -> RequestResultDTO {
+    func execute(dates: CreateRequestDTO) async throws -> RequestDTO {
         return try await requestRepository.sendRequest(dates: dates)
     }
 }

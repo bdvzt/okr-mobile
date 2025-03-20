@@ -11,7 +11,7 @@ struct Request {
     let id: Int
     let startedSkipping: Date
     let finishedSkipping: Date
-    let status: RequestStatus
-    let user: User
-    let proofs: [FileEntity]
+    let status: RequestStatus?
+    let user: User?
+    let proofs: [FileEntity]?
 }

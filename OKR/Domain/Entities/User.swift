@@ -10,6 +10,7 @@ struct User {
     let firstName: String
     let lastName: String
     let email: String
-    let role: UserRole
-    let isEnabled: Bool
+    let studentGroup: Group
+    let userRole: UserRole
+    let requestList: [Request]
 }
