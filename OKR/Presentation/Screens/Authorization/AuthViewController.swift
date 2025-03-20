@@ -8,9 +8,18 @@
 import UIKit
 import SnapKit
 
-class AuthViewController: UIViewController {
+final class AuthViewController: UIViewController {
 
     private let viewModel: AuthViewModelProtocol
+
+    init(viewModel: AuthViewModelProtocol) {
+        self.viewModel = viewModel
+        super.init(nibName: nil, bundle: nil)
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
 
     private let authLabel: UILabel = {
         let label = UILabel()
@@ -21,7 +30,8 @@ class AuthViewController: UIViewController {
         return label
     }()
 
-    private let emailInput: InputField = InputField(placeholder: "Email")
+    private let emailInput = InputField(placeholder: "Email")
+
     private let passwordInput: InputField = {
         let input = InputField(placeholder: "Пароль")
         input.setSecureTextEntry(true)
@@ -29,7 +39,7 @@ class AuthViewController: UIViewController {
     }()
 
     private let loginButton: UIButton = {
-        let button = UIButton()
+        let button = UIButton(type: .system)
         button.setTitle("Войти", for: .normal)
         button.setTitleColor(.white, for: .normal)
         button.layer.cornerRadius = 16
@@ -39,7 +49,7 @@ class AuthViewController: UIViewController {
     }()
 
     private let registrationButton: UIButton = {
-        let button = UIButton()
+        let button = UIButton(type: .system)
         button.setTitle("Зарегистрироваться", for: .normal)
         button.setTitleColor(.systemBlue, for: .normal)
         button.layer.cornerRadius = 20
@@ -47,15 +57,6 @@ class AuthViewController: UIViewController {
         button.titleLabel?.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
         return button
     }()
-
-    init(viewModel: AuthViewModelProtocol) {
-        self.viewModel = viewModel
-        super.init(nibName: nil, bundle: nil)
-    }
-
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -67,11 +68,9 @@ class AuthViewController: UIViewController {
     }
 
     private func setupViews() {
-        view.addSubview(authLabel)
-        view.addSubview(emailInput)
-        view.addSubview(passwordInput)
-        view.addSubview(loginButton)
-        view.addSubview(registrationButton)
+        [authLabel, emailInput, passwordInput, loginButton, registrationButton].forEach {
+            view.addSubview($0)
+        }
     }
 
     private func setupConstraints() {
@@ -112,28 +111,19 @@ class AuthViewController: UIViewController {
 
     private func setupBindings() {
         viewModel.onLoginSuccess = { [weak self] in
-            DispatchQueue.main.async {
-                self?.navigateToTabBar()
-            }
+            DispatchQueue.main.async { self?.navigateToTabBar() }
         }
 
         viewModel.onRegister = { [weak self] in
-            DispatchQueue.main.async {
-                self?.navigateToRegister()
-            }
+            DispatchQueue.main.async { self?.navigateToRegister() }
         }
     }
 
     @objc private func didTapLoginButton() {
         guard let email = emailInput.text, !email.isEmpty,
-              let password = passwordInput.text, !password.isEmpty else {
-            print("Введите email и пароль")
-            return
-        }
+              let password = passwordInput.text, !password.isEmpty else { return }
 
-        Task {
-            await viewModel.login(email: email, password: password)
-        }
+        Task { await viewModel.login(email: email, password: password) }
     }
 
     @objc private func didTapRegButton() {
@@ -142,23 +132,17 @@ class AuthViewController: UIViewController {
 
     private func navigateToTabBar() {
         guard let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-              let window = scene.windows.first else {
-            return
-        }
+              let window = scene.windows.first else { return }
 
-        let tabBarVC = TabBarController()
-        window.rootViewController = tabBarVC
+        window.rootViewController = TabBarController()
         window.makeKeyAndVisible()
     }
 
     private func navigateToRegister() {
-        let registerVC = RegistrationViewController(viewModel: RegistrationViewModel(registerUseCase: RegisterUseCase(authRepository: AuthRepositoryImpl())))
+        let registerVC = RegistrationViewController(
+            viewModel: RegistrationViewModel(registerUseCase: RegisterUseCase(authRepository: AuthRepositoryImpl()))
+        )
         registerVC.modalPresentationStyle = .fullScreen
-        present(registerVC, animated: true, completion: nil)
+        present(registerVC, animated: true)
     }
 }
-
-//
-//#Preview {
-//    AuthViewController()
-//}

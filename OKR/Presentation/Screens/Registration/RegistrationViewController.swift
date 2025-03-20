@@ -10,11 +10,9 @@ import SnapKit
 
 final class RegistrationViewController: UIViewController {
 
-    // MARK: - Properties
     private let viewModel: RegistrationViewModelProtocol
     private var selectedGroup: Group = .first
 
-    // MARK: - Init
     init(viewModel: RegistrationViewModelProtocol) {
         self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
@@ -24,12 +22,9 @@ final class RegistrationViewController: UIViewController {
         fatalError("init(coder:) has not been implemented")
     }
 
-    // MARK: - UI Elements
-
     private let closeButton: UIButton = {
         let button = UIButton(type: .system)
-        let image = UIImage(systemName: "xmark")?.withRenderingMode(.alwaysTemplate)
-        button.setImage(image, for: .normal)
+        button.setImage(UIImage(systemName: "xmark")?.withRenderingMode(.alwaysTemplate), for: .normal)
         button.tintColor = .black
         button.addTarget(self, action: #selector(didTapCloseButton), for: .touchUpInside)
         return button
@@ -51,6 +46,7 @@ final class RegistrationViewController: UIViewController {
     private let confirmPasswordInput = InputField(placeholder: "Подтвердите пароль")
 
     private let groupPickerView = UIPickerView()
+
     private let groupTextField: UITextField = {
         let textField = UITextField()
         textField.placeholder = "Выберите группу"
@@ -60,7 +56,7 @@ final class RegistrationViewController: UIViewController {
     }()
 
     private let registrationButton: UIButton = {
-        let button = UIButton()
+        let button = UIButton(type: .system)
         button.setTitle("Зарегистрироваться", for: .normal)
         button.setTitleColor(.white, for: .normal)
         button.layer.cornerRadius = 16
@@ -69,8 +65,6 @@ final class RegistrationViewController: UIViewController {
         button.addTarget(self, action: #selector(didTapRegisterButton), for: .touchUpInside)
         return button
     }()
-
-    // MARK: - Lifecycle
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -81,21 +75,12 @@ final class RegistrationViewController: UIViewController {
         setupBindings()
     }
 
-    // MARK: - Setup
-
     private func setupViews() {
         passwordInput.setSecureTextEntry(true)
         confirmPasswordInput.setSecureTextEntry(true)
 
-        view.addSubview(closeButton)
-        view.addSubview(registrationLabel)
-        view.addSubview(emailInput)
-        view.addSubview(surnameInput)
-        view.addSubview(nameInput)
-        view.addSubview(passwordInput)
-        view.addSubview(confirmPasswordInput)
-        view.addSubview(groupTextField)
-        view.addSubview(registrationButton)
+        [closeButton, registrationLabel, emailInput, surnameInput, nameInput, passwordInput,
+         confirmPasswordInput, groupTextField, registrationButton].forEach { view.addSubview($0) }
     }
 
     private func setupConstraints() {
@@ -153,7 +138,6 @@ final class RegistrationViewController: UIViewController {
         }
     }
 
-    // MARK: - Setup Picker
     private func setupGroupPicker() {
         groupPickerView.delegate = self
         groupPickerView.dataSource = self
@@ -161,18 +145,16 @@ final class RegistrationViewController: UIViewController {
         groupTextField.text = Group.first.displayName
     }
 
-    // MARK: - Actions
-
     @objc private func didTapCloseButton() {
-        dismiss(animated: true, completion: nil)
+        dismiss(animated: true)
     }
 
     @objc private func didTapRegisterButton() {
-        guard let email = emailInput.text,
-              let surname = surnameInput.text,
-              let name = nameInput.text,
-              let password = passwordInput.text,
-              let confirmPassword = confirmPasswordInput.text else {
+        guard let email = emailInput.text, !email.isEmpty,
+              let surname = surnameInput.text, !surname.isEmpty,
+              let name = nameInput.text, !name.isEmpty,
+              let password = passwordInput.text, !password.isEmpty,
+              let confirmPassword = confirmPasswordInput.text, !confirmPassword.isEmpty else {
             print("❌ Заполните все поля")
             return
         }
@@ -197,17 +179,13 @@ final class RegistrationViewController: UIViewController {
 
     private func navigateToTabBar() {
         guard let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-              let window = scene.windows.first else {
-            return
-        }
+              let window = scene.windows.first else { return }
 
-        let tabBarVC = TabBarController()
-        window.rootViewController = tabBarVC
+        window.rootViewController = TabBarController()
         window.makeKeyAndVisible()
     }
 }
 
-// MARK: - UIPickerView Delegate & DataSource
 extension RegistrationViewController: UIPickerViewDelegate, UIPickerViewDataSource {
     func numberOfComponents(in pickerView: UIPickerView) -> Int { return 1 }
 

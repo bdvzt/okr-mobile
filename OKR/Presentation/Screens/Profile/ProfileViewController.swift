@@ -10,10 +10,8 @@ import SnapKit
 
 final class ProfileViewController: UIViewController {
 
-    // MARK: - Properties
     private let viewModel: ProfileViewModelProtocol
 
-    // MARK: - Inits
     init(viewModel: ProfileViewModelProtocol) {
         self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
@@ -22,8 +20,6 @@ final class ProfileViewController: UIViewController {
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-
-    // MARK: - UI Components
 
     private let profileInfoLabel: UILabel = {
         let label = UILabel()
@@ -43,11 +39,7 @@ final class ProfileViewController: UIViewController {
         return button
     }()
 
-    private let requestsScrollView: UIScrollView = {
-        let scrollView = UIScrollView()
-        scrollView.alwaysBounceVertical = true
-        return scrollView
-    }()
+    private let requestsScrollView = UIScrollView()
 
     private let requestsStackView: UIStackView = {
         let stack = UIStackView()
@@ -56,7 +48,14 @@ final class ProfileViewController: UIViewController {
         return stack
     }()
 
-    // MARK: - Жизненный цикл
+    private let refreshButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.setTitle("Обновить", for: .normal)
+        button.setTitleColor(.systemBlue, for: .normal)
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
+        button.addTarget(self, action: #selector(refreshProfile), for: .touchUpInside)
+        return button
+    }()
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -67,12 +66,11 @@ final class ProfileViewController: UIViewController {
         logoutButton.addTarget(self, action: #selector(logoutAction), for: .touchUpInside)
     }
 
-    // MARK: - Настройка UI
-
     private func setupViews() {
         view.addSubview(profileInfoLabel)
         view.addSubview(requestsScrollView)
         view.addSubview(logoutButton)
+        view.addSubview(refreshButton)
         requestsScrollView.addSubview(requestsStackView)
     }
 
@@ -82,14 +80,14 @@ final class ProfileViewController: UIViewController {
             make.leading.trailing.equalToSuperview().inset(20)
         }
 
-        logoutButton.snp.makeConstraints { make in
-            make.leading.trailing.equalToSuperview().inset(20)
-            make.bottom.equalTo(view.safeAreaLayoutGuide).inset(20)
+        refreshButton.snp.makeConstraints { make in
+            make.top.equalTo(profileInfoLabel.snp.bottom).offset(10)
+            make.centerX.equalToSuperview()
             make.height.equalTo(44)
         }
 
         requestsScrollView.snp.makeConstraints { make in
-            make.top.equalTo(profileInfoLabel.snp.bottom).offset(60)
+            make.top.equalTo(refreshButton.snp.bottom).offset(20)
             make.leading.trailing.equalToSuperview().inset(20)
             make.bottom.equalTo(logoutButton.snp.top).offset(-20)
         }
@@ -98,12 +96,16 @@ final class ProfileViewController: UIViewController {
             make.edges.equalToSuperview()
             make.width.equalToSuperview()
         }
+
+        logoutButton.snp.makeConstraints { make in
+            make.leading.trailing.equalToSuperview().inset(20)
+            make.bottom.equalTo(view.safeAreaLayoutGuide).inset(20)
+            make.height.equalTo(44)
+        }
     }
 
-    // MARK: - User info
     private func loadProfile() {
         Task {
-            print("🔍 loadProfile() вызван") // ✅ Проверяем, вызывается ли метод
             do {
                 let user = try await viewModel.getInfo()
                 updateUI(with: user)
@@ -115,7 +117,6 @@ final class ProfileViewController: UIViewController {
 
     private func updateUI(with user: UserDTO) {
         DispatchQueue.main.async {
-            print("✅ Данные пользователя получены: \(user.firstName) \(user.lastName), группа: \(user.group)")
             self.profileInfoLabel.text = "\(user.firstName) \(user.lastName)\nГруппа: \(user.group)"
             self.populateRequests(user.requestList)
         }
@@ -125,19 +126,16 @@ final class ProfileViewController: UIViewController {
         requestsStackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
 
         let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy-MM-dd" // ✅ Формат сервера
+        dateFormatter.dateFormat = "yyyy-MM-dd"
 
         for request in requests {
             let requestView = RequestComponent()
 
-            let startDate = dateFormatter.date(from: request.startedSkipping)
-            let endDate = dateFormatter.date(from: request.finishedSkipping)
-
-            if let startDate = startDate, let endDate = endDate {
+            if let startDate = dateFormatter.date(from: request.startedSkipping),
+               let endDate = dateFormatter.date(from: request.finishedSkipping) {
                 requestView.configure(startDate: startDate, endDate: endDate, status: .pending)
-            } else {
-                print("⚠️ Ошибка парсинга даты для заявки ID: \(request.id)")
             }
+
             requestsStackView.addArrangedSubview(requestView)
         }
     }
@@ -149,8 +147,6 @@ final class ProfileViewController: UIViewController {
             self.present(alert, animated: true)
         }
     }
-
-    // MARK: - Actions
 
     @objc private func logoutAction() {
         Task {
@@ -167,5 +163,9 @@ final class ProfileViewController: UIViewController {
                 }
             }
         }
+    }
+
+    @objc private func refreshProfile() {
+        loadProfile()
     }
 }
