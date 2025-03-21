@@ -73,6 +73,7 @@ final class RegistrationViewController: UIViewController {
         setupConstraints()
         setupGroupPicker()
         setupBindings()
+        setupHideKeyboardOnTap()
     }
     
     private func setupViews() {
@@ -230,6 +231,16 @@ final class RegistrationViewController: UIViewController {
         let authVC = AuthViewController(viewModel: authViewModel)
         window.rootViewController = authVC
         window.makeKeyAndVisible()
+    }
+
+    private func setupHideKeyboardOnTap() {
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
+        tapGesture.cancelsTouchesInView = false
+        view.addGestureRecognizer(tapGesture)
+    }
+
+    @objc private func dismissKeyboard() {
+        view.endEditing(true)
     }
 }
 

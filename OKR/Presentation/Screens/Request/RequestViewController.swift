@@ -30,11 +30,27 @@ final class RequestViewController: UIViewController {
         return label
     }()
 
+    private let startDateLabel: UILabel = {
+        let label = UILabel()
+        label.text = "Начало:"
+        label.textColor = .black
+        label.font = UIFont.systemFont(ofSize: 18, weight: .medium)
+        return label
+    }()
+
     private let startDatePicker: UIDatePicker = {
         let picker = UIDatePicker()
         picker.datePickerMode = .date
         picker.preferredDatePickerStyle = .wheels
         return picker
+    }()
+
+    private let endDateLabel: UILabel = {
+        let label = UILabel()
+        label.text = "Конец:"
+        label.textColor = .black
+        label.font = UIFont.systemFont(ofSize: 18, weight: .medium)
+        return label
     }()
 
     private let endDatePicker: UIDatePicker = {
@@ -65,7 +81,9 @@ final class RequestViewController: UIViewController {
 
     private func setupViews() {
         view.addSubview(titleLabel)
+        view.addSubview(startDateLabel)
         view.addSubview(startDatePicker)
+        view.addSubview(endDateLabel)
         view.addSubview(endDatePicker)
         view.addSubview(sendRequestButton)
     }
@@ -76,14 +94,24 @@ final class RequestViewController: UIViewController {
             make.centerX.equalToSuperview()
         }
 
-        startDatePicker.snp.makeConstraints { make in
+        startDateLabel.snp.makeConstraints { make in
             make.top.equalTo(titleLabel.snp.bottom).offset(20)
-            make.leading.trailing.equalToSuperview().inset(20)
+            make.centerX.equalToSuperview()
+        }
+
+        startDatePicker.snp.makeConstraints { make in
+            make.top.equalTo(startDateLabel.snp.bottom).offset(5)
+            make.centerX.equalToSuperview()
+        }
+
+        endDateLabel.snp.makeConstraints { make in
+            make.top.equalTo(startDatePicker.snp.bottom).offset(20)
+            make.centerX.equalToSuperview()
         }
 
         endDatePicker.snp.makeConstraints { make in
-            make.top.equalTo(startDatePicker.snp.bottom).offset(20)
-            make.leading.trailing.equalToSuperview().inset(20)
+            make.top.equalTo(endDateLabel.snp.bottom).offset(5)
+            make.centerX.equalToSuperview()
         }
 
         sendRequestButton.snp.makeConstraints { make in
@@ -128,4 +156,3 @@ final class RequestViewController: UIViewController {
         present(alertController, animated: true, completion: nil)
     }
 }
-

@@ -14,14 +14,14 @@ final class RequestRepositoryImpl: RequestRepository {
         self.networkService = networkService
     }
 
-    func sendRequest(dates: CreateRequestDTO) async throws -> RequestDTO {
+    func sendRequest(dates: CreateRequestDTO) async throws -> RequestResponse {
         let requestData = try JSONEncoder().encode(dates)
         let config = RequestNetworkConfig.createRequest(requestData)
 
         let responseData = try await networkService.requestRaw(config: config, authorized: true)
 
         do {
-            let decodedResponse = try JSONDecoder().decode(RequestDTO.self, from: responseData)
+            let decodedResponse = try JSONDecoder().decode(RequestResponse.self, from: responseData)
             print("Ответ от сервера (создание заявки): \(decodedResponse)")
             return decodedResponse
         } catch {
