@@ -76,7 +76,7 @@ final class ProfileViewController: UIViewController {
 
     private func setupConstraints() {
         profileInfoLabel.snp.makeConstraints { make in
-            make.top.equalTo(view.safeAreaLayoutGuide).offset(20)
+            make.top.equalTo(view.safeAreaLayoutGuide)
             make.leading.trailing.equalToSuperview().inset(20)
         }
 
