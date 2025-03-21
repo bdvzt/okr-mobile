@@ -8,9 +8,18 @@
 import UIKit
 import SnapKit
 
-class AuthViewController: UIViewController {
+final class AuthViewController: UIViewController {
 
-    // MARK: - UI Elements
+    private let viewModel: AuthViewModelProtocol
+
+    init(viewModel: AuthViewModelProtocol) {
+        self.viewModel = viewModel
+        super.init(nibName: nil, bundle: nil)
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
 
     private let authLabel: UILabel = {
         let label = UILabel()
@@ -21,10 +30,7 @@ class AuthViewController: UIViewController {
         return label
     }()
 
-    private let emailInput: InputField = {
-        let input = InputField(placeholder: "Email")
-        return input
-    }()
+    private let emailInput = InputField(placeholder: "Email")
 
     private let passwordInput: InputField = {
         let input = InputField(placeholder: "Пароль")
@@ -33,44 +39,38 @@ class AuthViewController: UIViewController {
     }()
 
     private let loginButton: UIButton = {
-        let button = UIButton()
+        let button = UIButton(type: .system)
         button.setTitle("Войти", for: .normal)
         button.setTitleColor(.white, for: .normal)
         button.layer.cornerRadius = 16
         button.backgroundColor = .systemBlue
         button.titleLabel?.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
-        button.addTarget(self, action: #selector(didTapLoginButton), for: .touchUpInside)
         return button
     }()
 
     private let registrationButton: UIButton = {
-        let button = UIButton()
+        let button = UIButton(type: .system)
         button.setTitle("Зарегистрироваться", for: .normal)
         button.setTitleColor(.systemBlue, for: .normal)
         button.layer.cornerRadius = 20
         button.backgroundColor = .clear
         button.titleLabel?.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
-        button.addTarget(self, action: #selector(didTapRegButton), for: .touchUpInside)
         return button
     }()
-
-    // MARK: - Lifecycle
 
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .white
         setupViews()
         setupConstraints()
+        setupActions()
+        setupBindings()
     }
 
-    // MARK: - Setup
-
     private func setupViews() {
-        view.addSubview(authLabel)
-        view.addSubview(emailInput)
-        view.addSubview(passwordInput)
-        view.addSubview(loginButton)
-        view.addSubview(registrationButton)
+        [authLabel, emailInput, passwordInput, loginButton, registrationButton].forEach {
+            view.addSubview($0)
+        }
     }
 
     private func setupConstraints() {
@@ -104,23 +104,69 @@ class AuthViewController: UIViewController {
         }
     }
 
-    // MARK: - Methods
+    private func setupActions() {
+        loginButton.addTarget(self, action: #selector(didTapLoginButton), for: .touchUpInside)
+        registrationButton.addTarget(self, action: #selector(didTapRegButton), for: .touchUpInside)
+    }
 
-    @objc private func didTapLoginButton() {
-        let tabBarVC = TabBarController()
-        if let window = UIApplication.shared.windows.first {
-            window.rootViewController = tabBarVC
-            window.makeKeyAndVisible()
+    private func setupBindings() {
+        viewModel.onLoginSuccess = { [weak self] in
+            DispatchQueue.main.async { self?.navigateToTabBar() }
+        }
+
+        viewModel.onRegister = { [weak self] in
+            DispatchQueue.main.async { self?.navigateToRegister() }
         }
     }
 
-    @objc private func didTapRegButton() {
-        let regVC = RegistrationViewController()
-        regVC.modalPresentationStyle = .fullScreen
-        present(regVC, animated: true, completion: nil)
-    }
-}
+    @objc private func didTapLoginButton() {
+        guard let email = emailInput.text, !email.isEmpty,
+              let password = passwordInput.text, !password.isEmpty else {
+            showAlert(title: "Ошибка", message: "Заполните все поля")
+            return
+        }
 
-#Preview {
-    AuthViewController()
+        if !Validator.isValidEmail(email) {
+            showAlert(title: "Ошибка", message: "Введите корректный Email.")
+            return
+        }
+
+        if !Validator.isValidPassword(password) {
+            showAlert(title: "Ошибка", message: "Некорректный пароль. Он должен содержать минимум 8 символов, включая заглавную и строчную букву, цифру и один из символов !?.")
+            return
+        }
+
+        Task { await viewModel.login(email: email, password: password) }
+    }
+
+    private func showAlert(title: String, message: String) {
+        let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        present(alert, animated: true)
+    }
+
+    @objc private func didTapRegButton() {
+        viewModel.onRegister?()
+    }
+
+    private func navigateToTabBar() {
+        guard let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let window = scene.windows.first else { return }
+
+        let authViewModel = AuthViewModel(
+            loginUseCase: LoginUseCase(authRepository: AuthRepositoryImpl()),
+            getInfoUseCase: GetInfoUseCase(userRepository: UserRepositoryImpl()), logoutUseCase: LogoutUseCase(authRepository: AuthRepositoryImpl())
+        )
+
+        window.rootViewController = TabBarController()
+        window.makeKeyAndVisible()
+    }
+
+    private func navigateToRegister() {
+        let registerVC = RegistrationViewController(
+            viewModel: RegistrationViewModel(registerUseCase: RegisterUseCase(authRepository: AuthRepositoryImpl()), logoutUseCase: LogoutUseCase(authRepository: AuthRepositoryImpl()))
+        )
+        registerVC.modalPresentationStyle = .fullScreen
+        present(registerVC, animated: true)
+    }
 }

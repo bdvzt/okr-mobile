@@ -16,8 +16,27 @@ class TabBarController: UITabBarController {
     // MARK: - Tab Setup
 
     private func setupTabs() {
-        let requestVC = createNav(with: "Заявка", image: UIImage(systemName: "doc.text"), vc: RequestViewController())
-        let profileVC = createNav(with: "Профиль", image: UIImage(systemName: "person.crop.circle"), vc: ProfileViewController())
+        let requestVC = createNav(
+            with: "Заявка",
+            image: UIImage(systemName: "doc.text"),
+            vc: RequestViewController(
+                viewModel: RequestViewModel(
+                    sendRequestUseCase: SendRequestUseCase(
+                        requestRepository: RequestRepositoryImpl(
+                            networkService: NetworkService()
+                        )
+                    )
+                )
+            )
+        )
+        let profileVC = createNav(with: "Профиль", image: UIImage(systemName: "person.crop.circle"), vc: ProfileViewController(
+            viewModel: ProfileViewModel(
+                logoutUseCase: LogoutUseCase(
+                    authRepository: AuthRepositoryImpl()
+                ), getInfoUseCase: GetInfoUseCase(userRepository: UserRepositoryImpl())
+            )
+        )
+        )
 
         self.setViewControllers([requestVC, profileVC], animated: true)
         self.selectedIndex = 0

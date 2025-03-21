@@ -8,9 +8,18 @@
 import UIKit
 import SnapKit
 
-class RequestViewController: UIViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
+final class RequestViewController: UIViewController {
 
-    // MARK: - UI Elements
+    private let viewModel: RequestViewModelProtocol
+
+    init(viewModel: RequestViewModelProtocol) {
+        self.viewModel = viewModel
+        super.init(nibName: nil, bundle: nil)
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
 
     private let titleLabel: UILabel = {
         let label = UILabel()
@@ -35,16 +44,6 @@ class RequestViewController: UIViewController, UIImagePickerControllerDelegate, 
         return picker
     }()
 
-    private let attachButton: UIButton = {
-        let button = UIButton()
-        button.setTitle("Прикрепить документ", for: .normal)
-        button.setTitleColor(.systemBlue, for: .normal)
-        button.layer.cornerRadius = 20
-        button.backgroundColor = .clear
-        button.titleLabel?.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
-        return button
-    }()
-
     private let sendRequestButton: UIButton = {
         let button = UIButton()
         button.setTitle("Отправить", for: .normal)
@@ -52,29 +51,22 @@ class RequestViewController: UIViewController, UIImagePickerControllerDelegate, 
         button.layer.cornerRadius = 16
         button.backgroundColor = .systemBlue
         button.titleLabel?.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
+        button.addTarget(self, action: #selector(submitRequest), for: .touchUpInside)
         return button
     }()
-
-    private var selectedDocument: URL?
-
-    // MARK: - Lifecycle
 
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .white
         setupViews()
         setupConstraints()
-        attachButton.addTarget(self, action: #selector(attachDocument), for: .touchUpInside)
-        sendRequestButton.addTarget(self, action: #selector(submitRequest), for: .touchUpInside)
+        setupBindings()
     }
-
-    // MARK: - Setup
 
     private func setupViews() {
         view.addSubview(titleLabel)
         view.addSubview(startDatePicker)
         view.addSubview(endDatePicker)
-        view.addSubview(attachButton)
         view.addSubview(sendRequestButton)
     }
 
@@ -94,48 +86,46 @@ class RequestViewController: UIViewController, UIImagePickerControllerDelegate, 
             make.leading.trailing.equalToSuperview().inset(20)
         }
 
-        attachButton.snp.makeConstraints { make in
-            make.top.equalTo(endDatePicker.snp.bottom).offset(20)
-            make.leading.trailing.equalToSuperview().inset(20)
-            make.height.equalTo(44)
-        }
-
         sendRequestButton.snp.makeConstraints { make in
-            make.top.equalTo(attachButton.snp.bottom).offset(20)
+            make.top.equalTo(endDatePicker.snp.bottom).offset(20)
             make.leading.trailing.equalToSuperview().inset(20)
             make.height.equalTo(44)
         }
     }
 
-    // MARK: - Actions
+    private func setupBindings() {
+        viewModel.onRequestSuccess = { [weak self] message in
+            DispatchQueue.main.async {
+                self?.showAlert(title: "Успех", message: message)
+            }
+        }
 
-    @objc private func attachDocument() {
-        let documentPicker = UIDocumentPickerViewController(forOpeningContentTypes: [.pdf, .image], asCopy: true)
-        documentPicker.delegate = self
-        present(documentPicker, animated: true)
+        viewModel.onRequestFailure = { [weak self] errorMessage in
+            DispatchQueue.main.async {
+                self?.showAlert(title: "Ошибка", message: errorMessage)
+            }
+        }
     }
 
     @objc private func submitRequest() {
         let startDate = startDatePicker.date
         let endDate = endDatePicker.date
 
-        if let document = selectedDocument {
-            print("Дата начала: \(startDate), Дата окончания: \(endDate), Документ: \(document.lastPathComponent)")
-        } else {
-            print("Дата начала: \(startDate), Дата окончания: \(endDate), Документ не прикреплён")
+        let dateFormatter = ISO8601DateFormatter()
+        let startString = dateFormatter.string(from: startDate)
+        let endString = dateFormatter.string(from: endDate)
+
+        let request = CreateRequestDTO(startedSkipping: startString, finishedSkipping: endString)
+
+        Task {
+            await viewModel.sendRequest(dates: request)
         }
     }
-}
 
-// MARK: - UIDocumentPicker Delegate
-
-extension RequestViewController: UIDocumentPickerDelegate {
-    func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
-        selectedDocument = urls.first
-        print("Документ выбран: \(selectedDocument?.lastPathComponent ?? "Нет")")
+    private func showAlert(title: String, message: String) {
+        let alertController = UIAlertController(title: title, message: message, preferredStyle: .alert)
+        alertController.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
+        present(alertController, animated: true, completion: nil)
     }
 }
 
-#Preview {
-    RequestViewController()
-}
