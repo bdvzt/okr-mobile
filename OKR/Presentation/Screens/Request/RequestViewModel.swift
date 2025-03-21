@@ -23,9 +23,17 @@ final class RequestViewModel: RequestViewModelProtocol {
 
     func sendRequest(dates: CreateRequestDTO) async {
         do {
-            let response = try await sendRequestUseCase.execute(dates: dates)
+            _ = try await sendRequestUseCase.execute(dates: dates)
+
+            await MainActor.run { [weak self] in
+                self?.onRequestSuccess?("Заявка успешно отправлена!")
+            }
         } catch {
-            print(error.localizedDescription)
+            print("Ошибка: \(error.localizedDescription)")
+
+            await MainActor.run { [weak self] in
+                self?.onRequestFailure?("Ошибка при отправке заявки: \(error.localizedDescription)")
+            }
         }
     }
 }
