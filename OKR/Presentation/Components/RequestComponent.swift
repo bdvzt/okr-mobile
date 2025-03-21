@@ -10,9 +10,41 @@ import SnapKit
 
 final class RequestComponent: UIView {
 
-    private let startDateLabel = UILabel()
-    private let endDateLabel = UILabel()
-    private let statusLabel = UILabel()
+    private let startTitleLabel: UILabel = {
+        let label = UILabel()
+        label.text = "Начало"
+        label.font = UIFont.systemFont(ofSize: 12, weight: .medium)
+        label.textColor = .gray
+        return label
+    }()
+
+    private let startDateLabel: UILabel = {
+        let label = UILabel()
+        label.font = UIFont.systemFont(ofSize: 14)
+        return label
+    }()
+
+    private let endTitleLabel: UILabel = {
+        let label = UILabel()
+        label.text = "Конец"
+        label.font = UIFont.systemFont(ofSize: 12, weight: .medium)
+        label.textColor = .gray
+        return label
+    }()
+
+    private let endDateLabel: UILabel = {
+        let label = UILabel()
+        label.font = UIFont.systemFont(ofSize: 14)
+        return label
+    }()
+
+    private let statusLabel: UILabel = {
+        let label = UILabel()
+        label.font = UIFont.systemFont(ofSize: 14, weight: .medium)
+        label.textAlignment = .center
+        return label
+    }()
+
     private let editButton: UIButton = {
         let button = UIButton(type: .system)
         button.setImage(UIImage(systemName: "pencil"), for: .normal)
@@ -34,15 +66,27 @@ final class RequestComponent: UIView {
     }
 
     private func setupViews() {
-        let stack = UIStackView(arrangedSubviews: [startDateLabel, endDateLabel, statusLabel, editButton])
-        stack.axis = .horizontal
-        stack.spacing = 8
-        stack.alignment = .center
-        stack.distribution = .equalSpacing
-        addSubview(stack)
+        let startStack = UIStackView(arrangedSubviews: [startTitleLabel, startDateLabel])
+        startStack.axis = .vertical
+        startStack.spacing = 2
 
-        stack.snp.makeConstraints { make in
+        let endStack = UIStackView(arrangedSubviews: [endTitleLabel, endDateLabel])
+        endStack.axis = .vertical
+        endStack.spacing = 2
+
+        let mainStack = UIStackView(arrangedSubviews: [startStack, endStack, statusLabel, editButton])
+        mainStack.axis = .horizontal
+        mainStack.spacing = 12
+        mainStack.alignment = .center
+        mainStack.distribution = .fill
+
+        addSubview(mainStack)
+        mainStack.snp.makeConstraints { make in
             make.edges.equalToSuperview().inset(8)
+        }
+
+        editButton.snp.makeConstraints { make in
+            make.width.height.equalTo(30)
         }
 
         editButton.addTarget(self, action: #selector(editButtonTapped), for: .touchUpInside)
@@ -71,6 +115,7 @@ final class RequestComponent: UIView {
             case .rejected: return "Отклонено"
             }
         }()
+
         statusLabel.textColor = {
             switch status {
             case .pending: return .systemBlue
