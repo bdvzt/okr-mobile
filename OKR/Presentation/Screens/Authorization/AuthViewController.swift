@@ -65,6 +65,7 @@ final class AuthViewController: UIViewController {
         setupConstraints()
         setupActions()
         setupBindings()
+        setupHideKeyboardOnTap()
     }
 
     private func setupViews() {
@@ -168,5 +169,15 @@ final class AuthViewController: UIViewController {
         )
         registerVC.modalPresentationStyle = .fullScreen
         present(registerVC, animated: true)
+    }
+
+    private func setupHideKeyboardOnTap() {
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
+        tapGesture.cancelsTouchesInView = false
+        view.addGestureRecognizer(tapGesture)
+    }
+
+    @objc private func dismissKeyboard() {
+        view.endEditing(true)
     }
 }
