@@ -57,6 +57,5 @@ final class InputField: UIInputView {
     func setSecureTextEntry(_ isSecure: Bool) {
         textField.isSecureTextEntry = isSecure
     }
-
 }
 
